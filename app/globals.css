@@ -24,3 +24,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.home-hero-backdrop {
+  background:
+    radial-gradient(ellipse at center, #ffffff 0 29%, rgb(255 255 255 / 88%) 43%, transparent 76%),
+    repeating-linear-gradient(90deg, rgb(210 225 255 / 42%) 0 10%, rgb(226 240 255 / 22%) 10% 20%, transparent 20% 30%),
+    linear-gradient(180deg, #f6f6fa 0%, #eaf6ff 72%, #ffffff 100%);
+}
