@@ -707,7 +707,7 @@ export default function HomeSections() {
         {/* Decorative Background Tangle Text Ribbon at extreme left edge (compact on mobile, visible on all screens) */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-20 sm:-left-36 lg:-left-44 top-[74%] -translate-y-1/2 z-0 opacity-25 sm:opacity-35 lg:opacity-45 select-none rotate-90 origin-center scale-50 sm:scale-95 lg:scale-110 w-[240px] sm:w-[460px] lg:w-[520px]"
+          className="pointer-events-none absolute -left-32 sm:-left-36 lg:-left-44 top-[93%] sm:top-[74%] -translate-y-1/2 z-0 opacity-25 sm:opacity-35 lg:opacity-45 select-none rotate-90 origin-center scale-50 sm:scale-95 lg:scale-110 w-[240px] sm:w-[460px] lg:w-[520px]"
         >
           <TangleFooter
             background="transparent"

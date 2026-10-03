@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
@@ -193,9 +193,11 @@ export default function SearchPageView() {
   
   const openLoginModal = useLoginModal();
 
-  useEffect(() => {
-    if (initialQuery) setQuery(initialQuery);
-  }, [initialQuery]);
+  const [prevInitialQuery, setPrevInitialQuery] = useState(initialQuery);
+  if (prevInitialQuery !== initialQuery) {
+    setPrevInitialQuery(initialQuery);
+    setQuery(initialQuery);
+  }
 
   // Simple direct substring filtering (strictly following the rule: Keep matching simple. No mathematical or AI matching.)
   const filteredPosts = useMemo(() => {

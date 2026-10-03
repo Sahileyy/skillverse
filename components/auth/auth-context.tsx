@@ -48,8 +48,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refreshUser();
-  }, [refreshUser]);
+    let ignore = false;
+    async function initAuth() {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!ignore) {
+          if (res.ok) {
+            const data = await res.json();
+            setUser(data.user);
+          } else {
+            setUser(null);
+          }
+        }
+      } catch {
+        if (!ignore) {
+          setUser(null);
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    initAuth();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
