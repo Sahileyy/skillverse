@@ -5,6 +5,13 @@ import { hashPassword, signJWT, AUTH_COOKIE_NAME } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { error: "DATABASE_URL is not configured in Vercel Environment Variables. Please add DATABASE_URL in Vercel Project Settings." },
+        { status: 500 }
+      );
+    }
+
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
 
