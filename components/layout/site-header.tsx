@@ -6,10 +6,10 @@ import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
 
 const navigation = [
-  { label: "Discover", href: "#discover" },
-  { label: "Teach", href: "#teach" },
-  { label: "Mentors", href: "#mentors" },
-  { label: "Community", href: "#community" },
+  { label: "Find Mentors", href: "/search" },
+  { label: "Community Projects", href: "/community" },
+  { label: "Session Formats", href: "/#sessions" },
+  { label: "AI Tools", href: "/#ai-tools" },
 ];
 
 export default function SiteHeader() {
@@ -42,6 +42,12 @@ export default function SiteHeader() {
         <div className="ml-auto flex items-center gap-2 sm:gap-4">
           {!isLoading && user ? (
             <div className="flex items-center gap-3">
+              <Link
+                href="/messages"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <span>💬 Messages</span>
+              </Link>
               <div className="flex flex-col items-end">
                 <span className="text-sm font-bold text-[#151515]">{user.name}</span>
                 <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-blue-700">
