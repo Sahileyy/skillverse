@@ -312,10 +312,7 @@ export default function CommunityProjectsView() {
         {/* Header Title & Post CTA */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">
-              <span>🚀 Collaborative Peer Projects</span>
-            </div>
-            <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
               Community Project Board
             </h1>
             <p className="mt-1 text-sm text-slate-600">
@@ -407,8 +404,7 @@ export default function CommunityProjectsView() {
                         <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-bold text-indigo-700">
                           {project.category}
                         </span>
-                        <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                          <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                           Recruiting
                         </span>
                       </div>

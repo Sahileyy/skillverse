@@ -21,10 +21,31 @@ export type RoadmapMilestone = {
   isCompleted?: boolean;
 };
 
+function PathwayIcon({ id, className = "size-5" }: { id: string; className?: string }) {
+  if (id === "aiml") {
+    return (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    );
+  }
+  if (id === "uiux") {
+    return (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    );
+  }
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+    </svg>
+  );
+}
+
 export type CareerPathway = {
   id: string;
   title: string;
-  icon: string;
   description: string;
   targetRole: string;
   estimatedMonths: string;
@@ -36,7 +57,6 @@ export const CAREER_PATHWAYS: Record<string, CareerPathway> = {
   "fullstack": {
     id: "fullstack",
     title: "Full-Stack Software Engineer",
-    icon: "💻",
     description: "From client-side UI to database modeling, authentication security, and scalable cloud deployment.",
     targetRole: "Full-Stack Engineer (React + Next.js + PostgreSQL)",
     estimatedMonths: "3 - 5 Months",
@@ -102,7 +122,7 @@ export const CAREER_PATHWAYS: Record<string, CareerPathway> = {
       {
         id: "m-6",
         stage: "TARGET",
-        title: "🎯 Target Role Achieved: Full-Stack Engineer",
+        title: "Target Role: Full-Stack Engineer",
         description: "Ready for technical portfolio evaluations, take-home challenges, and system design interviews.",
         skills: ["System Design", "Technical Interviews", "Portfolio Projects"],
         resources: ["System Design Primer", "Mock Interview Rubric"],
@@ -113,7 +133,6 @@ export const CAREER_PATHWAYS: Record<string, CareerPathway> = {
   "aiml": {
     id: "aiml",
     title: "AI & Machine Learning Engineer",
-    icon: "🤖",
     description: "Master modern Python, deep learning with PyTorch, vector databases, and RAG application deployment.",
     targetRole: "Applied Machine Learning Engineer",
     estimatedMonths: "4 - 6 Months",
@@ -164,7 +183,7 @@ export const CAREER_PATHWAYS: Record<string, CareerPathway> = {
       {
         id: "m-ai-5",
         stage: "TARGET",
-        title: "🎯 Target Role Achieved: AI / ML Engineer",
+        title: "Target Role: AI / ML Engineer",
         description: "Equipped to develop enterprise LLM applications, model fine-tuning pipelines, and data systems.",
         skills: ["Model Fine-tuning", "Evaluation Benchmarks"],
         resources: ["ML Interview Guide"],
@@ -175,7 +194,6 @@ export const CAREER_PATHWAYS: Record<string, CareerPathway> = {
   "uiux": {
     id: "uiux",
     title: "Product Designer & Design Systems",
-    icon: "🎨",
     description: "From user research and Figma component architecture to design tokens, wireframing, and design-dev handoff.",
     targetRole: "Product Designer (UI/UX & Design Systems)",
     estimatedMonths: "3 - 4 Months",
@@ -226,7 +244,7 @@ export const CAREER_PATHWAYS: Record<string, CareerPathway> = {
       {
         id: "m-ui-5",
         stage: "TARGET",
-        title: "🎯 Target Role Achieved: Product Designer",
+        title: "Target Role: Product Designer",
         description: "Ready for product design critiques, whiteboard design challenges, and portfolio reviews.",
         skills: ["Design Critique", "Portfolio Review"],
         resources: ["Product Design Interview Handbook"],
@@ -277,10 +295,7 @@ export default function AIRoadmapView() {
 
         {/* Header Title */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">
-            <span>🗺️ Visual Progression Pathway (roadmap.sh UX)</span>
-          </div>
-          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
             AI Career Roadmap & Skill Gap Analyzer
           </h1>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-600">
@@ -301,7 +316,9 @@ export default function AIRoadmapView() {
                   : "border-slate-200 bg-white/70 hover:border-slate-300 hover:bg-white"
               }`}
             >
-              <span className="text-2xl">{path.icon}</span>
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                <PathwayIcon id={path.id} />
+              </div>
               <div>
                 <h3 className="text-xs font-bold text-slate-900 sm:text-sm">{path.title}</h3>
                 <p className="text-[11px] text-slate-500">{path.estimatedMonths}</p>
@@ -314,8 +331,10 @@ export default function AIRoadmapView() {
         <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{activePathway.icon}</span>
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <PathwayIcon id={activePathway.id} />
+                </div>
                 <h2 className="text-xl font-bold text-slate-900">{activePathway.targetRole}</h2>
               </div>
               <p className="mt-1 text-xs text-slate-600 max-w-xl">
@@ -403,7 +422,7 @@ export default function AIRoadmapView() {
                           )}
                           {node.stage === "SKILL_GAP" && (
                             <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                              ⚠️ Identified Skill Gap
+                              Identified Skill Gap
                             </span>
                           )}
                           {node.stage === "RECOMMENDED" && (

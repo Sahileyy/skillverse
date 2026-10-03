@@ -31,8 +31,8 @@ export const QUIZ_BANK: Record<string, SkillQuiz> = {
     id: "react",
     skillName: "React & Next.js Architecture",
     category: "Frontend",
-    icon: "⚛️",
     difficulty: "Intermediate",
+    icon: "React",
     estimatedTime: "5 mins",
     description: "Evaluates state management, hooks lifecycle, server component boundaries, and performance optimization.",
     questions: [
@@ -109,9 +109,9 @@ export const QUIZ_BANK: Record<string, SkillQuiz> = {
   python: {
     id: "python",
     skillName: "Python & Applied AI",
-    category: "AI & Backend",
-    icon: "🐍",
-    difficulty: "Intermediate",
+    category: "Backend & AI",
+    difficulty: "Advanced",
+    icon: "PY",
     estimatedTime: "5 mins",
     description: "Evaluates Python data structures, decorators, generators, tensor operations, and API modeling.",
     questions: [
@@ -186,8 +186,8 @@ export const QUIZ_BANK: Record<string, SkillQuiz> = {
     id: "dsa",
     skillName: "Data Structures & Algorithms",
     category: "Computer Science",
-    icon: "⚡",
-    difficulty: "Advanced",
+    difficulty: "Intermediate",
+    icon: "DSA",
     estimatedTime: "5 mins",
     description: "Evaluates asymptotic complexity, graph traversals, dynamic programming, and binary trees.",
     questions: [
@@ -345,10 +345,7 @@ export default function AIAssessmentView() {
         {currentStep === "SELECT" && (
           <div>
             <div className="text-center">
-              <div className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
-                <span>✨ AI-Verified Skill Assessment</span>
-              </div>
-              <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
                 Test & Verify Your Technical Skills
               </h1>
               <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-600">
@@ -365,7 +362,9 @@ export default function AIAssessmentView() {
                 >
                   <div>
                     <div className="flex items-center justify-between">
-                      <span className="text-3xl">{quiz.icon}</span>
+                      <span className="flex h-8 items-center justify-center rounded-lg bg-slate-100 px-2.5 font-mono text-xs font-bold text-slate-800">
+                        {quiz.icon}
+                      </span>
                       <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-700">
                         {quiz.difficulty}
                       </span>
@@ -377,9 +376,9 @@ export default function AIAssessmentView() {
                     </p>
 
                     <div className="mt-5 flex items-center gap-3 text-xs font-medium text-slate-500">
-                      <span>📝 5 Questions</span>
+                      <span>5 Questions</span>
                       <span>•</span>
-                      <span>⏱ {quiz.estimatedTime}</span>
+                      <span>{quiz.estimatedTime}</span>
                     </div>
                   </div>
 
@@ -422,7 +421,7 @@ export default function AIAssessmentView() {
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{activeQuiz.icon}</span>
+                  <span className="rounded bg-blue-50 px-2 py-0.5 font-mono text-xs font-bold text-blue-700">{activeQuiz.icon}</span>
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     {activeQuiz.skillName}
                   </span>
@@ -556,7 +555,7 @@ export default function AIAssessmentView() {
               {scoreResult.badgeEarned ? (
                 <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 text-emerald-900 text-xs">
                   <div className="flex items-center justify-center gap-1.5 font-bold text-emerald-800 text-sm">
-                    <span>✨ AI-Verified Badge Unlocked!</span>
+                    <span>AI-Verified Badge Unlocked</span>
                   </div>
                   <p className="mt-1">
                     This verified badge has been credited to your profile. Mentors and project leads will see your verified status.

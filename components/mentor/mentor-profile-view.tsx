@@ -752,8 +752,8 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                   </button>
 
                   <div className="mt-4 space-y-1 text-center text-[10px] text-slate-400">
-                    <p>⚡ Instant Google Meet Link upon mentor confirmation</p>
-                    <p>🔒 100% Secure • Free cancellation anytime</p>
+                    <p>Instant Google Meet link upon mentor confirmation</p>
+                    <p>Secure booking • Free cancellation anytime</p>
                   </div>
                 </div>
               )}

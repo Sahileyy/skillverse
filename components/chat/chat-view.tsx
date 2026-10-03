@@ -409,7 +409,9 @@ export default function ChatView() {
                     {msg.meetingCard && (
                       <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-slate-900">
                         <div className="flex items-center gap-2 font-bold text-xs text-blue-900">
-                          <span>🎥</span>
+                          <svg className="size-3.5 shrink-0 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
                           <span>{msg.meetingCard.title}</span>
                         </div>
                         <p className="mt-1 text-[11px] text-slate-600">{msg.meetingCard.time}</p>

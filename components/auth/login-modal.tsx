@@ -121,7 +121,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
                         : "border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300"
                     }`}
                   >
-                    🎓 Student / Learner
+                    Student / Learner
                   </button>
                   <button
                     type="button"
@@ -132,7 +132,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
                         : "border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300"
                     }`}
                   >
-                    💡 Mentor / Teacher
+                    Mentor / Teacher
                   </button>
                 </div>
               </div>
