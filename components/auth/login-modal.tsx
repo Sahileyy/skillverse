@@ -1,13 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/auth-context";
 
 type LoginModalProps = {
   onClose: () => void;
 };
 
 export default function LoginModal({ onClose }: LoginModalProps) {
+  const { login, register } = useAuth();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  
+  // Form fields
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"STUDENT" | "MENTOR">("STUDENT");
+  
+  // UI status
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -24,101 +37,210 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     };
   }, [onClose]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setIsLoading(true);
+
+    try {
+      if (mode === "signin") {
+        const result = await login(email, password);
+        if (result.success) {
+          onClose();
+        } else {
+          setErrorMessage(result.error || "Failed to sign in");
+        }
+      } else {
+        const result = await register(name, email, password, role);
+        if (result.success) {
+          onClose();
+        } else {
+          setErrorMessage(result.error || "Failed to sign up");
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#000000]/85 px-4 py-6"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 px-4 py-6 backdrop-blur-xs"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
       <section
-        aria-labelledby="login-title"
+        aria-labelledby="auth-title"
         aria-modal="true"
-        className="w-full max-w-[450px] rounded-[20px] bg-white p-6 text-[#151717] shadow-2xl sm:p-[30px]"
+        className="w-full max-w-[450px] rounded-[24px] bg-white p-6 text-[#151717] shadow-2xl sm:p-[30px]"
         role="dialog"
       >
-        <h2 className="sr-only" id="login-title">Sign in to SkillVerse</h2>
-        <form className="flex flex-col gap-[10px]" onSubmit={(event) => event.preventDefault()}>
-          <label className="font-semibold" htmlFor="login-email">Email</label>
-          <div className="flex h-[50px] items-center rounded-[10px] border border-[#ecedec] px-[10px] transition-colors focus-within:border-[#2d79f3]">
-            <span aria-hidden="true" className="text-[20px]">@</span>
-            <input
-              autoComplete="email"
-              className="ml-[10px] h-full min-w-0 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-[#858585]"
-              id="login-email"
-              name="email"
-              placeholder="Enter your Email"
-              required
-              type="email"
-            />
+        <div className="flex items-center justify-between pb-3">
+          <div>
+            <h2 className="text-xl font-bold text-[#111111]" id="auth-title">
+              {mode === "signin" ? "Welcome Back" : "Join SkillVerse"}
+            </h2>
+            <p className="text-xs text-gray-500">
+              {mode === "signin"
+                ? "Enter your credentials to access your account"
+                : "Choose your role and start sharing or learning skills"}
+            </p>
           </div>
-
-          <label className="mt-1 font-semibold" htmlFor="login-password">Password</label>
-          <div className="flex h-[50px] items-center rounded-[10px] border border-[#ecedec] px-[10px] transition-colors focus-within:border-[#2d79f3]">
-            <svg aria-hidden="true" className="size-[18px] shrink-0" fill="none" viewBox="0 0 24 24">
-              <rect height="12" rx="1.5" stroke="currentColor" strokeWidth="1.7" width="16" x="4" y="10" />
-              <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="currentColor" strokeWidth="1.7" />
+          <button
+            onClick={onClose}
+            type="button"
+            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            aria-label="Close"
+          >
+            <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
-            <input
-              autoComplete="current-password"
-              className="ml-[10px] h-full min-w-0 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-[#858585]"
-              id="login-password"
-              name="password"
-              placeholder="Enter your Password"
-              required
-              type={isPasswordVisible ? "text" : "password"}
-            />
-            <button
-              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded focus-visible:outline-2 focus-visible:outline-[#2d79f3]"
-              onClick={() => setIsPasswordVisible((visible) => !visible)}
-              type="button"
-            >
-              <svg aria-hidden="true" className="size-[21px]" fill="none" viewBox="0 0 24 24">
-                <path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z" fill="currentColor" />
-                <circle cx="12" cy="12" fill="white" r="3.2" />
-                <circle cx="12" cy="12" fill="currentColor" r="1.7" />
-              </svg>
-            </button>
+          </button>
+        </div>
+
+        {errorMessage && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600">
+            {errorMessage}
+          </div>
+        )}
+
+        <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
+          {mode === "signup" && (
+            <>
+              {/* Role Selection */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-gray-600">I am a</label>
+                <div className="mt-1 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRole("STUDENT")}
+                    className={`h-[42px] rounded-lg border text-xs font-semibold transition-all ${
+                      role === "STUDENT"
+                        ? "border-[#151515] bg-[#151515] text-white"
+                        : "border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    🎓 Student / Learner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("MENTOR")}
+                    className={`h-[42px] rounded-lg border text-xs font-semibold transition-all ${
+                      role === "MENTOR"
+                        ? "border-[#151515] bg-[#151515] text-white"
+                        : "border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    💡 Mentor / Teacher
+                  </button>
+                </div>
+              </div>
+
+              {/* Name */}
+              <div>
+                <label className="text-xs font-semibold text-gray-700" htmlFor="signup-name">Full Name</label>
+                <div className="mt-1 flex h-[46px] items-center rounded-lg border border-[#ecedec] px-3 focus-within:border-[#2d79f3]">
+                  <input
+                    id="signup-name"
+                    name="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    required
+                    className="h-full w-full border-0 bg-transparent text-sm outline-none placeholder:text-gray-400"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Email */}
+          <div>
+            <label className="text-xs font-semibold text-gray-700" htmlFor="login-email">Email</label>
+            <div className="mt-1 flex h-[46px] items-center rounded-lg border border-[#ecedec] px-3 focus-within:border-[#2d79f3]">
+              <span aria-hidden="true" className="text-gray-400">@</span>
+              <input
+                autoComplete="email"
+                className="ml-2 h-full min-w-0 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-gray-400"
+                id="login-email"
+                name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                required
+                type="email"
+              />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 pt-1 text-sm">
-            <label className="inline-flex items-center gap-1.5 text-black">
-              <input className="size-[14px] accent-[#2d79f3]" name="remember" type="checkbox" />
-              Remember me
-            </label>
-            <button className="text-[#2d79f3] hover:underline" type="button">Forgot password?</button>
+          {/* Password */}
+          <div>
+            <label className="text-xs font-semibold text-gray-700" htmlFor="login-password">Password</label>
+            <div className="mt-1 flex h-[46px] items-center rounded-lg border border-[#ecedec] px-3 focus-within:border-[#2d79f3]">
+              <svg aria-hidden="true" className="size-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24">
+                <rect height="12" rx="1.5" stroke="currentColor" strokeWidth="1.7" width="16" x="4" y="10" />
+                <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="currentColor" strokeWidth="1.7" />
+              </svg>
+              <input
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                className="ml-2 h-full min-w-0 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-gray-400"
+                id="login-password"
+                name="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={mode === "signup" ? "At least 6 characters" : "Enter your password"}
+                required
+                type={isPasswordVisible ? "text" : "password"}
+              />
+              <button
+                aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded text-gray-400 hover:text-gray-700"
+                onClick={() => setIsPasswordVisible((visible) => !visible)}
+                type="button"
+              >
+                <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isPasswordVisible ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
 
           <button
-            className="mt-[20px] h-[50px] w-full rounded-[10px] bg-[#151717] text-[15px] font-medium text-white transition-colors hover:bg-[#252727] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2d79f3]"
+            className="mt-3 flex h-[48px] w-full items-center justify-center rounded-lg bg-[#151717] text-sm font-medium text-white transition-colors hover:bg-[#252727] disabled:opacity-50"
             type="submit"
+            disabled={isLoading}
           >
-            Sign In
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <svg className="size-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                {mode === "signin" ? "Signing In..." : "Creating Account..."}
+              </span>
+            ) : (
+              mode === "signin" ? "Sign In" : "Create Account"
+            )}
           </button>
 
-          <p className="my-[5px] text-center text-sm text-black">
-            Don&apos;t have an account? <button className="ml-1 text-[#2d79f3] hover:underline" type="button">Sign Up</button>
+          <p className="mt-2 text-center text-xs text-gray-600">
+            {mode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
+            <button
+              className="font-semibold text-[#2d79f3] hover:underline"
+              onClick={() => {
+                setMode(mode === "signin" ? "signup" : "signin");
+                setErrorMessage(null);
+              }}
+              type="button"
+            >
+              {mode === "signin" ? "Sign Up" : "Sign In"}
+            </button>
           </p>
-          <p className="my-[5px] text-center text-sm text-black">Or With</p>
-
-          <div className="mt-[10px] grid grid-cols-2 gap-[10px]">
-            <button className="flex h-[50px] items-center justify-center gap-[10px] rounded-[10px] border border-[#ededef] bg-white font-medium transition-colors hover:border-[#2d79f3]" type="button">
-              <svg aria-hidden="true" className="size-5" viewBox="0 0 48 48">
-                <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15Z" />
-                <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.2A20 20 0 0 0 24 44Z" />
-                <path fill="#FBBC05" d="M12.8 27.8a12 12 0 0 1 0-7.6V15H5.9a20 20 0 0 0 0 18l6.9-5.2Z" />
-                <path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.9 15l6.9 5.2C14.4 15.5 18.8 12 24 12Z" />
-              </svg>
-              Google
-            </button>
-            <button className="flex h-[50px] items-center justify-center gap-[10px] rounded-[10px] border border-[#ededef] bg-white font-medium transition-colors hover:border-[#2d79f3]" type="button">
-              <svg aria-hidden="true" className="size-5 fill-current" viewBox="0 0 24 24">
-                <path d="M16.4 12.8c0-2.2 1.8-3.3 1.9-3.4a4.2 4.2 0 0 0-3.3-1.8c-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8a4.5 4.5 0 0 0-3.8 2.3c-1.6 2.8-.4 6.9 1.2 9.1.8 1.1 1.7 2.3 2.9 2.2 1.2 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.1 2.8-2.3a10 10 0 0 0 1.3-2.7 4 4 0 0 1-2.6-3.4ZM14.1 6.1a4 4 0 0 0 1-3 4.2 4.2 0 0 0-2.8 1.4 3.8 3.8 0 0 0-1 2.9 3.5 3.5 0 0 0 2.8-1.3Z" />
-              </svg>
-              Apple
-            </button>
-          </div>
         </form>
       </section>
     </div>

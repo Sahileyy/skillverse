@@ -1,0 +1,236 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  STUDENT
+  MENTOR
+  ADMIN
+}
+
+enum PricingType {
+  FREE
+  PAID
+}
+
+enum PostStatus {
+  ACTIVE
+  PAUSED
+  REMOVED
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportTargetType {
+  USER
+  POST
+  PROJECT_POST
+  MESSAGE
+}
+
+// 1. User
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String?
+  image         String?
+  role          Role      @default(STUDENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile             Profile?
+  posts               Post[]                @relation("MentorPosts")
+  sentBookings        Booking[]             @relation("StudentBookings")
+  recvBookings        Booking[]             @relation("MentorBookings")
+  reviewsGiven        Review[]              @relation("ReviewsGiven")
+  reviewsRecv         Review[]              @relation("ReviewsRecv")
+  user1Conversations  Conversation[]        @relation("User1Conversations")
+  user2Conversations  Conversation[]        @relation("User2Conversations")
+  messages            Message[]
+  assessments         SkillAssessment[]
+  projectPosts        ProjectPost[]         @relation("ProjectAuthor")
+  projectJoinRequests ProjectJoinRequest[]  @relation("StudentJoinRequests")
+  reportsCreated      Report[]              @relation("Reporter")
+  reportsReceived     Report[]              @relation("ReportedUser")
+}
+
+// 2. Profile
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline    String?
+  bio         String?
+  timezone    String   @default("UTC")
+  githubUrl   String?
+  linkedinUrl String?
+}
+
+// 3. Post (Mentor session offers)
+model Post {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation("MentorPosts", fields: [userId], references: [id], onDelete: Cascade)
+  skillName    String      // e.g. "Python", "React", "UI Design"
+  category     String      // e.g. "Programming", "Design", "Data Science"
+  title        String      // e.g. "Learn Python DSA from scratch"
+  description  String      // Detailed info on what is offered
+  pricingType  PricingType @default(FREE)
+  priceAmount  Float?      // Price if PAID
+  availability String?     // e.g. "Weekends 6 PM - 9 PM"
+  status       PostStatus  @default(ACTIVE)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  bookings     Booking[]
+  reports      Report[]    @relation("ReportedPost")
+}
+
+// 4. Booking (Student session requests)
+model Booking {
+  id          String        @id @default(cuid())
+  postId      String
+  post        Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  studentId   String
+  mentorId    String
+  student     User          @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Cascade)
+  mentor      User          @relation("MentorBookings", fields: [mentorId], references: [id], onDelete: Cascade)
+  status      BookingStatus @default(PENDING)
+  scheduledAt DateTime?
+  meetingUrl  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  reviews     Review[]
+}
+
+// 5. Review (1-5 star ratings & feedback)
+model Review {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  authorId  String
+  targetId  String
+  author    User     @relation("ReviewsGiven", fields: [authorId], references: [id], onDelete: Cascade)
+  target    User     @relation("ReviewsRecv", fields: [targetId], references: [id], onDelete: Cascade)
+  rating    Int      // 1 to 5
+  comment   String
+  createdAt DateTime @default(now())
+}
+
+// 6. Conversation (1-on-1 direct chat)
+model Conversation {
+  id        String    @id @default(cuid())
+  user1Id   String
+  user2Id   String
+  user1     User      @relation("User1Conversations", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2     User      @relation("User2Conversations", fields: [user2Id], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  messages  Message[]
+
+  @@unique([user1Id, user2Id])
+}
+
+// 7. Message (Chat message)
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  reports        Report[]     @relation("ReportedMessage")
+}
+
+// 8. SkillAssessment (AI Skill Test)
+model SkillAssessment {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillName  String
+  score      Float
+  isVerified Boolean  @default(false)
+  feedback   String
+  createdAt  DateTime @default(now())
+}
+
+// 9. ProjectPost (Community project collaboration board)
+model ProjectPost {
+  id           String               @id @default(cuid())
+  userId       String
+  user         User                 @relation("ProjectAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  skillsNeeded String[]
+  contactInfo  String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  joinRequests ProjectJoinRequest[]
+  reports      Report[]             @relation("ReportedProjectPost")
+}
+
+// 10. ProjectJoinRequest (Student request + Team head approval)
+model ProjectJoinRequest {
+  id            String        @id @default(cuid())
+  projectId     String
+  project       ProjectPost   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       User          @relation("StudentJoinRequests", fields: [studentId], references: [id], onDelete: Cascade)
+  message       String?
+  status        RequestStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([projectId, studentId])
+}
+
+// 11. Report (Admin moderation for inappropriate content)
+model Report {
+  id            String           @id @default(cuid())
+  reporterId    String
+  reporter      User             @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType    ReportTargetType
+  reportedUserId String?
+  reportedUser  User?            @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  reportedPostId String?
+  reportedPost  Post?            @relation("ReportedPost", fields: [reportedPostId], references: [id], onDelete: Cascade)
+  reportedProjectId String?
+  reportedProject ProjectPost?   @relation("ReportedProjectPost", fields: [reportedProjectId], references: [id], onDelete: Cascade)
+  reportedMessageId String?
+  reportedMessage Message?       @relation("ReportedMessage", fields: [reportedMessageId], references: [id], onDelete: Cascade)
+  reason        String
+  status        ReportStatus     @default(PENDING)
+  adminNotes    String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
