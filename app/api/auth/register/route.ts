@@ -76,10 +76,11 @@ export async function POST(req: NextRequest) {
     });
 
     return response;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Register Error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Something went wrong during registration";
     return NextResponse.json(
-      { error: "Something went wrong during registration" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
