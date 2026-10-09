@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
-import { useAuth } from "@/components/auth/auth-context";
 import OrganicSphereLoader from "@/components/home/organic-sphere-loader";
 import { TangleFooter } from "@/components/ui/tangle-footer";
 
@@ -151,39 +150,16 @@ const RECENT_REVIEWS = [
   },
 ];
 
-function AirbnbLogo({ className = "size-7" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 32 32" fill="#FF385C" aria-hidden="true">
-      <path d="M16 1c2.008 0 3.463.963 4.751 3.269l.533.982c2.227 4.148 4.606 8.924 5.922 13.069 1.139 3.593.639 6.892-1.393 9.213-1.854 2.119-4.524 3.26-7.513 3.26-3.088 0-5.803-1.164-7.669-3.328-1.95-2.261-2.434-5.46-1.341-8.995 1.298-4.2 3.659-8.985 5.894-13.161l.532-.979C12.186 2.012 13.791 1 16 1zm0 2.2c-1.314 0-2.316.634-3.239 2.279l-.513.945C10.08 10.457 7.784 15.11 6.55 19.1c-.911 2.949-.519 5.485 1.031 7.285 1.442 1.671 3.619 2.607 6.119 2.607 2.399 0 4.549-.916 6.04-2.62 1.572-1.797 1.977-4.425 1.09-7.227-1.258-3.99-3.568-8.625-5.783-12.75l-.513-.948C17.688 3.868 17.135 3.2 16 3.2zm0 8.8c3.204 0 5.8 2.596 5.8 5.8 0 2.267-1.374 4.57-3.504 6.877-.734.796-1.527 1.551-2.296 2.257-.769-.706-1.562-1.461-2.296-2.257C11.574 22.37 10.2 20.067 10.2 17.8c0-3.204 2.596-5.8 5.8-5.8zm0 2.2c-1.988 0-3.6 1.612-3.6 3.6 0 1.488.983 3.197 2.628 5.039.349.392.698.767 1.026 1.112.328-.345.677-.72 1.026-1.112C18.617 21.797 19.6 20.088 19.6 18.6c0-1.988-1.612-3.6-3.6-3.6z" />
-    </svg>
-  );
-}
-
-function AppleLogo({ className = "size-7" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 170 170" fill="#000000" aria-hidden="true">
-      <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.67-7.81-11.96-14.31-7.16-10.9-12.87-23.6-17.13-38.11-4.26-14.5-6.39-28.05-6.39-40.64 0-16.14 4.09-29.67 12.28-40.59 8.19-10.92 18.39-16.48 30.6-16.69 4.36 0 9.29 1.15 14.81 3.44 5.51 2.29 9.35 3.49 11.51 3.6 2.45-.22 6.53-1.48 12.24-3.79 5.71-2.31 10.42-3.35 14.13-3.12 13.9.64 24.87 5.73 32.91 15.26-12.28 7.42-18.28 17.52-18 30.3.28 10.02 4.18 18.31 11.7 24.88 7.52 6.57 16.38 10.28 26.58 11.13-2.6 7.6-5.88 15.15-9.84 22.65zM119.22 31.81c0-7.39 2.65-14.37 7.96-20.94 5.3-6.57 11.83-10.63 19.57-12.18.22 1.3.33 2.49.33 3.58 0 7.39-2.82 14.59-8.47 21.6-5.65 7.01-12.42 11.02-20.31 12.02-.33-1.41-.5-2.67-.5-3.78z" />
-    </svg>
-  );
-}
-
 export default function HomeSections() {
   const router = useRouter();
   const openLoginModal = useLoginModal();
-  const { user } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [activeProjectTab, setActiveProjectTab] = useState<string | null>(null);
-
-  // Card save bookmark toggles matching the reference design
-  const [card1Saved, setCard1Saved] = useState(false);
-  const [card2Saved, setCard2Saved] = useState(true);
 
   // Mobile "View More" toggle states
   const [showAllMentorsMobile, setShowAllMentorsMobile] = useState(false);
   const [showAllProjectsMobile, setShowAllProjectsMobile] = useState(false);
-  const [showAllReviewsMobile, setShowAllReviewsMobile] = useState(false);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -573,7 +549,6 @@ export default function HomeSections() {
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveProjectTab(proj.id);
                     openLoginModal();
                   }}
                   className="w-full rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 py-2 sm:py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-900 hover:text-white"
@@ -610,98 +585,88 @@ export default function HomeSections() {
       <section id="ai-tools" className="border-t border-slate-200 bg-[#f7f8fa] px-4 py-12 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-200/70 px-3.5 py-1 text-xs font-semibold text-blue-700 shadow-2xs mb-3">
+              <span>✦</span>
+              <span>Intelligent Career Acceleration</span>
+            </div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
               Supercharge Your Growth with AI
             </h2>
-            <p className="mx-auto mt-1 sm:mt-2 max-w-2xl text-xs sm:text-sm text-slate-600">
-              Validate your technical skills with adaptive quizzes or map your personalized career progression path.
+            <p className="mx-auto mt-2 max-w-2xl text-xs sm:text-sm text-slate-600">
+              Validate your technical skills with adaptive assessments or map your personalized career progression path powered by Groq LLaMA-3.3.
             </p>
           </div>
 
           <div className="mt-8 sm:mt-12 grid gap-6 sm:gap-8 md:grid-cols-2 max-w-4xl mx-auto">
             {/* Tool 1: AI Skill Assessment */}
-            <div className="flex flex-col justify-between rounded-[32px] border border-black/[0.04] bg-white p-6 sm:p-8 shadow-[0_12px_36px_rgba(0,0,0,0.05)] transition-all hover:shadow-[0_16px_44px_rgba(0,0,0,0.08)]">
+            <div className="group flex flex-col justify-between rounded-[32px] border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_12px_36px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(37,99,235,0.12)] hover:border-blue-300">
               <div>
-                {/* Top Row: Circular Logo + Save Button */}
+                {/* Top Row: AI Icon + Feature Badge */}
                 <div className="flex items-center justify-between">
-                  <div className="flex size-14 items-center justify-center rounded-full border border-black/[0.08] bg-white p-3 shadow-2xs">
-                    <AirbnbLogo className="size-7" />
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white shadow-md shadow-blue-500/25 transition-transform duration-300 group-hover:scale-105">
+                    <svg className="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setCard1Saved(!card1Saved)}
-                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs transition-colors cursor-pointer ${
-                      card1Saved
-                        ? "bg-[#e5e7eb]/90 font-semibold text-neutral-900 shadow-2xs"
-                        : "border border-black/10 bg-white font-medium text-neutral-600 hover:bg-neutral-50 shadow-2xs"
-                    }`}
-                  >
-                    <span>{card1Saved ? "Saved" : "Save"}</span>
-                    <svg
-                      className="size-3.5"
-                      viewBox="0 0 24 24"
-                      fill={card1Saved ? "currentColor" : "none"}
-                      stroke="currentColor"
-                      strokeWidth={card1Saved ? 0 : 2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                      />
-                    </svg>
-                  </button>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200/80 px-3.5 py-1 text-xs font-bold text-blue-700 shadow-2xs">
+                    <span className="inline-block size-1.5 rounded-full bg-blue-500 animate-pulse" />
+                    Adaptive Testing • +10 XP
+                  </span>
                 </div>
 
                 {/* Metadata & Title */}
                 <div className="mt-5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] sm:text-sm font-semibold text-neutral-900">
-                      Airbnb
+                    <span className="text-[13px] sm:text-sm font-bold text-blue-600">
+                      AI Skill Assessment
                     </span>
-                    <span className="text-xs font-normal text-neutral-400">
-                      5 days ago
+                    <span className="text-xs font-medium text-slate-400">
+                      • 5 Adaptive Questions
                     </span>
                   </div>
 
-                  <h3 className="mt-1.5 text-lg sm:text-[21px] font-bold tracking-tight text-neutral-900">
-                    Junior UI/UX Designer
+                  <h3 className="mt-1.5 text-lg sm:text-[22px] font-extrabold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
+                    AI Skill Assessment & Verification
                   </h3>
-                  <p className="mt-0.5 text-xs font-semibold text-rose-600">
-                    AI Skill Assessment Track
+                  <p className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-slate-600">
+                    Test your profile skills across <strong>Simple</strong>, <strong>Medium</strong>, and <strong>Hard</strong> tiers. Score 60%+ to unlock an official verified badge on your profile.
                   </p>
 
                   {/* Pill Tags */}
-                  <div className="mt-3.5 flex flex-wrap items-center gap-2">
-                    <span className="rounded-xl bg-[#f2f4f7] px-3.5 py-1.5 text-xs font-medium text-neutral-700">
-                      Contract
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span className="rounded-xl bg-blue-50/90 border border-blue-200/70 px-3 py-1.5 text-xs font-semibold text-blue-800">
+                      3 Difficulty Tiers
                     </span>
-                    <span className="rounded-xl bg-[#f2f4f7] px-3.5 py-1.5 text-xs font-medium text-neutral-700">
-                      Remote
+                    <span className="rounded-xl bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700">
+                      Profile-Grounded
+                    </span>
+                    <span className="rounded-xl bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 text-xs font-semibold text-emerald-800">
+                      AI-Verified Badge
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Thin Divider & Bottom Row */}
+              {/* Bottom Row */}
               <div className="mt-6">
-                <div className="border-t border-black/[0.06] pt-5">
+                <div className="border-t border-slate-100 pt-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-base sm:text-[17px] font-bold text-neutral-900">
-                        $100/hr
+                      <div className="text-base sm:text-[17px] font-black text-slate-900">
+                        5 Mins Quiz
                       </div>
-                      <div className="text-xs text-neutral-400 mt-0.5">
-                        Delhi, India
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        Instant Score & Verification
                       </div>
                     </div>
 
                     <Link
                       href="/assessment"
-                      className="inline-flex items-center justify-center rounded-xl bg-[#141414] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-black active:scale-[0.98] shadow-xs"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-blue-600 px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-bold text-white transition-all duration-200 active:scale-[0.98] shadow-sm hover:shadow-md"
                     >
-                      Apply now
+                      <span>Start Assessment</span>
+                      <span className="transition-transform group-hover:translate-x-0.5">→</span>
                     </Link>
                   </div>
                 </div>
@@ -709,88 +674,75 @@ export default function HomeSections() {
             </div>
 
             {/* Tool 2: AI Career Guidance */}
-            <div className="flex flex-col justify-between rounded-[32px] border border-black/[0.04] bg-white p-6 sm:p-8 shadow-[0_12px_36px_rgba(0,0,0,0.05)] transition-all hover:shadow-[0_16px_44px_rgba(0,0,0,0.08)]">
+            <div className="group flex flex-col justify-between rounded-[32px] border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_12px_36px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(99,102,241,0.12)] hover:border-indigo-300">
               <div>
-                {/* Top Row: Circular Logo + Saved Button */}
+                {/* Top Row: Compass Icon + Feature Badge */}
                 <div className="flex items-center justify-between">
-                  <div className="flex size-14 items-center justify-center rounded-full border border-black/[0.08] bg-white p-3 shadow-2xs">
-                    <AppleLogo className="size-7" />
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white shadow-md shadow-indigo-500/25 transition-transform duration-300 group-hover:scale-105">
+                    <svg className="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 8.25l-2.25 6.75-6.75 2.25 2.25-6.75 6.75-2.25z" />
+                    </svg>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setCard2Saved(!card2Saved)}
-                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs transition-colors cursor-pointer ${
-                      card2Saved
-                        ? "bg-[#e5e7eb]/90 font-semibold text-neutral-900 shadow-2xs"
-                        : "border border-black/10 bg-white font-medium text-neutral-600 hover:bg-neutral-50 shadow-2xs"
-                    }`}
-                  >
-                    <span>{card2Saved ? "Saved" : "Save"}</span>
-                    <svg
-                      className="size-3.5"
-                      viewBox="0 0 24 24"
-                      fill={card2Saved ? "currentColor" : "none"}
-                      stroke="currentColor"
-                      strokeWidth={card2Saved ? 0 : 2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                      />
-                    </svg>
-                  </button>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 px-3.5 py-1 text-xs font-bold text-indigo-700 shadow-2xs">
+                    <span className="inline-block size-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                    Dynamic Roadmap • +5 XP
+                  </span>
                 </div>
 
                 {/* Metadata & Title */}
                 <div className="mt-5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] sm:text-sm font-semibold text-neutral-900">
-                      Apple
+                    <span className="text-[13px] sm:text-sm font-bold text-indigo-600">
+                      AI Career Guidance
                     </span>
-                    <span className="text-xs font-normal text-neutral-400">
-                      5 days ago
+                    <span className="text-xs font-medium text-slate-400">
+                      • 5 Waypoint Stages
                     </span>
                   </div>
 
-                  <h3 className="mt-1.5 text-lg sm:text-[21px] font-bold tracking-tight text-neutral-900">
-                    Graphic Designer
+                  <h3 className="mt-1.5 text-lg sm:text-[22px] font-extrabold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    AI Career Guidance & Roadmap
                   </h3>
-                  <p className="mt-0.5 text-xs font-semibold text-indigo-600">
-                    AI Career Pathway Track
+                  <p className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-slate-600">
+                    Calibrated directly from your quiz score. Identifies skill gaps, generates custom milestone stages, and connects you with verified mentors.
                   </p>
 
                   {/* Pill Tags */}
-                  <div className="mt-3.5 flex flex-wrap items-center gap-2">
-                    <span className="rounded-xl bg-[#f2f4f7] px-3.5 py-1.5 text-xs font-medium text-neutral-700">
-                      Full-Time
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span className="rounded-xl bg-indigo-50/90 border border-indigo-200/70 px-3 py-1.5 text-xs font-semibold text-indigo-800">
+                      Skill Gap Diagnostics
                     </span>
-                    <span className="rounded-xl bg-[#f2f4f7] px-3.5 py-1.5 text-xs font-medium text-neutral-700">
-                      Flexible Schedule
+                    <span className="rounded-xl bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700">
+                      Calibrated Waypoints
+                    </span>
+                    <span className="rounded-xl bg-purple-50 border border-purple-200/80 px-3 py-1.5 text-xs font-semibold text-purple-800">
+                      Dream Role Generator
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Thin Divider & Bottom Row */}
+              {/* Bottom Row */}
               <div className="mt-6">
-                <div className="border-t border-black/[0.06] pt-5">
+                <div className="border-t border-slate-100 pt-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-base sm:text-[17px] font-bold text-neutral-900">
-                        $85-120k
+                      <div className="text-base sm:text-[17px] font-black text-slate-900">
+                        Active Roadmap
                       </div>
-                      <div className="text-xs text-neutral-400 mt-0.5">
-                        Kerala, India
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        Calibrated from Your Test Score
                       </div>
                     </div>
 
                     <Link
                       href="/roadmap"
-                      className="inline-flex items-center justify-center rounded-xl bg-[#141414] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-black active:scale-[0.98] shadow-xs"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-indigo-600 px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-bold text-white transition-all duration-200 active:scale-[0.98] shadow-sm hover:shadow-md"
                     >
-                      Apply now
+                      <span>Explore Roadmap</span>
+                      <span className="transition-transform group-hover:translate-x-0.5">→</span>
                     </Link>
                   </div>
                 </div>
