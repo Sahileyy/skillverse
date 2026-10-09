@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
-import OrganicSphereLoader from "@/components/home/organic-sphere-loader";
 import { TangleFooter } from "@/components/ui/tangle-footer";
 
 // Sample Curated Data for the UI Sections
@@ -178,22 +177,23 @@ export default function HomeSections() {
     <>
       {/* 1. HERO SECTION: Direct Search & Value Proposition */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9]/60 to-white px-4 pt-12 pb-14 sm:px-8 sm:pt-20 sm:pb-20 lg:pt-24">
-        {/* Subtle grid background pattern */}
+        {/* Subtle studio background ambient glow */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f015_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f015_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.07),rgba(255,255,255,0))] select-none"
         />
-
-        {/* Decorative Background Organic Kinetic Orbit (Optimized for mobile) */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute right-[2%] sm:right-[12%] lg:right-[18%] xl:right-[22%] top-1/2 -translate-y-1/2 z-0 opacity-15 sm:opacity-45 lg:opacity-55 scale-60 sm:scale-95 lg:scale-110 select-none"
-        >
-          <OrganicSphereLoader />
-        </div>
+          className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_30%,#000_70%,transparent_100%)] opacity-60"
+        />
 
         {/* Centered Hero Content */}
         <div className="relative z-10 mx-auto max-w-5xl text-center">
+          {/* Hero Social Proof Tag */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white/90 px-3.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs backdrop-blur-sm">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Over 1,200 Verified Peer Mentorship Sessions</span>
+          </div>
           {/* Hero Headline */}
           <h1 className="mt-4 text-3xl font-black tracking-tight text-[#0f172a] sm:text-5xl lg:text-6xl sm:leading-tight lg:leading-[1.12]">
             Master Any Skill with Peers & Mentors{" "}
@@ -581,19 +581,19 @@ export default function HomeSections() {
         </div>
       </section>
 
-      {/* 5. AI SUITE: Skill Assessment & Career Roadmap */}
-      <section id="ai-tools" className="border-t border-slate-200 bg-[#f7f8fa] px-4 py-12 sm:px-8 sm:py-20">
+      {/* 5. SKILL VERIFICATION & CAREER ROADMAP */}
+      <section id="ai-tools" className="border-t border-slate-200/90 bg-[#f8fafc] px-4 py-12 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-200/70 px-3.5 py-1 text-xs font-semibold text-blue-700 shadow-2xs mb-3">
-              <span>✦</span>
-              <span>Intelligent Career Acceleration</span>
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 border border-slate-200 px-3.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs mb-3">
+              <span className="size-1.5 rounded-full bg-blue-600" />
+              <span>Skill Verification & Career Pathways</span>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              Supercharge Your Growth with AI
+            <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              Benchmark Your Skills. Accelerate Your Career.
             </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-xs sm:text-sm text-slate-600">
-              Validate your technical skills with adaptive assessments or map your personalized career progression path powered by Groq LLaMA-3.3.
+            <p className="mx-auto mt-2 max-w-2xl text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Validate technical depth through adaptive diagnostic assessments or generate milestone-driven progression roadmaps tailored to your career goals.
             </p>
           </div>
 
@@ -611,7 +611,7 @@ export default function HomeSections() {
 
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200/80 px-3.5 py-1 text-xs font-bold text-blue-700 shadow-2xs">
                     <span className="inline-block size-1.5 rounded-full bg-blue-500 animate-pulse" />
-                    Adaptive Testing • +10 XP
+                    Adaptive Evaluation • +10 XP
                   </span>
                 </div>
 
@@ -619,7 +619,7 @@ export default function HomeSections() {
                 <div className="mt-5">
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] sm:text-sm font-bold text-blue-600">
-                      AI Skill Assessment
+                      Technical Competency Quiz
                     </span>
                     <span className="text-xs font-medium text-slate-400">
                       • 5 Adaptive Questions
@@ -627,10 +627,10 @@ export default function HomeSections() {
                   </div>
 
                   <h3 className="mt-1.5 text-lg sm:text-[22px] font-extrabold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
-                    AI Skill Assessment & Verification
+                    Skill Assessment & Verification
                   </h3>
                   <p className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-slate-600">
-                    Test your profile skills across <strong>Simple</strong>, <strong>Medium</strong>, and <strong>Hard</strong> tiers. Score 60%+ to unlock an official verified badge on your profile.
+                    Assess your engineering depth across <strong>Simple</strong>, <strong>Medium</strong>, and <strong>Hard</strong> tiers. Score 60%+ to earn an official verified badge visible to peers and mentors.
                   </p>
 
                   {/* Pill Tags */}
@@ -639,10 +639,10 @@ export default function HomeSections() {
                       3 Difficulty Tiers
                     </span>
                     <span className="rounded-xl bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700">
-                      Profile-Grounded
+                      Objective Scoring
                     </span>
                     <span className="rounded-xl bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 text-xs font-semibold text-emerald-800">
-                      AI-Verified Badge
+                      Verified Skill Badge
                     </span>
                   </div>
                 </div>
@@ -657,7 +657,7 @@ export default function HomeSections() {
                         5 Mins Quiz
                       </div>
                       <div className="text-xs text-slate-500 mt-0.5">
-                        Instant Score & Verification
+                        Instant Verification & XP
                       </div>
                     </div>
 
@@ -687,7 +687,7 @@ export default function HomeSections() {
 
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 px-3.5 py-1 text-xs font-bold text-indigo-700 shadow-2xs">
                     <span className="inline-block size-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                    Dynamic Roadmap • +5 XP
+                    Career Trajectory • +5 XP
                   </span>
                 </div>
 
@@ -695,18 +695,18 @@ export default function HomeSections() {
                 <div className="mt-5">
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] sm:text-sm font-bold text-indigo-600">
-                      AI Career Guidance
+                      Career Pathway
                     </span>
                     <span className="text-xs font-medium text-slate-400">
-                      • 5 Waypoint Stages
+                      • 5 Milestone Stages
                     </span>
                   </div>
 
                   <h3 className="mt-1.5 text-lg sm:text-[22px] font-extrabold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
-                    AI Career Guidance & Roadmap
+                    Career Pathway & Growth Roadmap
                   </h3>
                   <p className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-slate-600">
-                    Calibrated directly from your quiz score. Identifies skill gaps, generates custom milestone stages, and connects you with verified mentors.
+                    Calibrated directly from your quiz score. Identifies high-impact skill gaps, generates custom milestone stages, and connects you with verified mentors.
                   </p>
 
                   {/* Pill Tags */}
@@ -715,10 +715,10 @@ export default function HomeSections() {
                       Skill Gap Diagnostics
                     </span>
                     <span className="rounded-xl bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700">
-                      Calibrated Waypoints
+                      Structured Waypoints
                     </span>
                     <span className="rounded-xl bg-purple-50 border border-purple-200/80 px-3 py-1.5 text-xs font-semibold text-purple-800">
-                      Dream Role Generator
+                      Mentor Pairing
                     </span>
                   </div>
                 </div>
@@ -733,7 +733,7 @@ export default function HomeSections() {
                         Active Roadmap
                       </div>
                       <div className="text-xs text-slate-500 mt-0.5">
-                        Calibrated from Your Test Score
+                        Calibrated from Quiz Score
                       </div>
                     </div>
 
