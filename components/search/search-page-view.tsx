@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
+import { useAuth } from "@/components/auth/auth-context";
 
 export type MentorPost = {
   id: string;
@@ -12,7 +13,7 @@ export type MentorPost = {
   mentorAvatar: string;
   mentorHeadline: string;
   skillName: string;
-  category: "Frontend" | "Backend" | "Mobile" | "UI/UX Design" | "AI / ML" | "DevOps & Cloud";
+  category: string;
   title: string;
   description: string;
   pricingType: "FREE" | "PAID";
@@ -22,6 +23,7 @@ export type MentorPost = {
   reviewCount: number;
   sessionsCompleted: number;
   tags: string[];
+  isVerifiedPeer?: boolean;
 };
 
 export const MENTOR_POSTS_DATA: MentorPost[] = [
@@ -192,6 +194,7 @@ export default function SearchPageView() {
   const [sortBy, setSortBy] = useState<"rating" | "reviews" | "sessions">("rating");
   
   const openLoginModal = useLoginModal();
+  const { user } = useAuth();
 
   const [prevInitialQuery, setPrevInitialQuery] = useState(initialQuery);
   if (prevInitialQuery !== initialQuery) {
@@ -199,11 +202,106 @@ export default function SearchPageView() {
     setQuery(initialQuery);
   }
 
-  // Simple direct substring filtering (strictly following the rule: Keep matching simple. No mathematical or AI matching.)
+  // Live posts fetched from PostgreSQL database
+  const [dbPosts, setDbPosts] = useState<MentorPost[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+    async function loadLivePosts() {
+      try {
+        const res = await fetch("/api/posts");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.posts) && !ignore) {
+            type ApiPost = {
+              id: string;
+              userId: string;
+              skillName: string;
+              category: string;
+              title: string;
+              description: string;
+              pricingType: "FREE" | "PAID";
+              priceAmount: number | null;
+              availability: string | null;
+              user?: {
+                id: string;
+                name: string;
+                email: string;
+                image: string | null;
+                xp: number;
+                profile?: {
+                  headline: string | null;
+                  mentorLevel: string | null;
+                  mentorScore: number | null;
+                  skills: string[];
+                } | null;
+                reviewsRecv?: { rating: number }[];
+                _count?: { recvBookings: number };
+              };
+            };
+
+            const mapped: MentorPost[] = data.posts.map((p: ApiPost) => {
+              const mentorName = p.user?.name || "Peer Mentor";
+              const avatar =
+                p.user?.image ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(mentorName)}&background=0f172a&color=fff`;
+
+              const headline =
+                p.user?.profile?.headline ||
+                (p.user?.profile?.mentorLevel
+                  ? `👑 ${p.user.profile.mentorLevel} • Verified Peer`
+                  : "Verified Peer Mentor");
+
+              const revs = p.user?.reviewsRecv || [];
+              const avgRating =
+                revs.length > 0
+                  ? revs.reduce((acc, r) => acc + r.rating, 0) / revs.length
+                  : 5.0;
+
+              return {
+                id: p.id,
+                mentorId: p.userId,
+                mentorName,
+                mentorAvatar: avatar,
+                mentorHeadline: headline,
+                skillName: p.skillName,
+                category: p.category,
+                title: p.title,
+                description: p.description,
+                pricingType: p.pricingType,
+                priceAmount: p.pricingType === "PAID" && p.priceAmount ? `₹${p.priceAmount}` : null,
+                availability: p.availability || "Weekends & Evenings",
+                rating: avgRating,
+                reviewCount: revs.length || 1,
+                sessionsCompleted: (p.user?._count?.recvBookings || 0) + 1,
+                tags: [p.skillName, p.category, ...(p.user?.profile?.skills || [])],
+                isVerifiedPeer: true,
+              };
+            });
+            setDbPosts(mapped);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load live database posts:", err);
+      }
+    }
+
+    loadLivePosts();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  // Merge live database posts with established peer listings
+  const allPosts = useMemo(() => {
+    return [...dbPosts, ...MENTOR_POSTS_DATA];
+  }, [dbPosts]);
+
+  // Simple direct substring filtering
   const filteredPosts = useMemo(() => {
     const normalizedQuery = query.toLowerCase().trim();
 
-    return MENTOR_POSTS_DATA.filter((post) => {
+    return allPosts.filter((post) => {
       // 1. Text Query Match (Skill, Title, Description, Mentor Name, or Tags)
       const matchesQuery =
         !normalizedQuery ||
@@ -228,7 +326,7 @@ export default function SearchPageView() {
       if (sortBy === "sessions") return b.sessionsCompleted - a.sessionsCompleted;
       return 0;
     });
-  }, [query, selectedCategory, pricingFilter, sortBy]);
+  }, [allPosts, query, selectedCategory, pricingFilter, sortBy]);
 
   const handleClearFilters = () => {
     setQuery("");
@@ -249,7 +347,7 @@ export default function SearchPageView() {
         </div>
 
         {/* Header Title */}
-        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
               Explore Skills & Mentors
@@ -259,8 +357,27 @@ export default function SearchPageView() {
             </p>
           </div>
 
-          <div className="text-xs font-semibold text-slate-500">
-            <span>{filteredPosts.length} session offers available</span>
+          <div className="flex flex-wrap items-center gap-3">
+            {user?.role === "MENTOR" ? (
+              <Link
+                href="/mentor/dashboard"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02]"
+              >
+                <span>📢 Manage or Post Skill Ad</span>
+                <span>→</span>
+              </Link>
+            ) : (
+              <Link
+                href="/mentor/dashboard"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-xs transition"
+              >
+                <span>Are you a Mentor? Post an Ad</span>
+                <span>→</span>
+              </Link>
+            )}
+            <div className="text-xs font-semibold text-slate-500">
+              <span>{filteredPosts.length} session offers available</span>
+            </div>
           </div>
         </div>
 
@@ -424,6 +541,11 @@ export default function SearchPageView() {
                             <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
                               MENTOR
                             </span>
+                            {post.isVerifiedPeer && (
+                              <span className="rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[9px] font-bold text-emerald-800">
+                                ● LIVE AD
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs font-medium text-slate-500">{post.mentorHeadline}</p>
                         </div>

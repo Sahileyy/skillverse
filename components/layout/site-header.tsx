@@ -28,20 +28,75 @@ export default function SiteHeader() {
         </Link>
 
         <nav aria-label="Primary navigation" className="ml-14 hidden items-center gap-7 lg:flex">
-          {navigation.map((item) => (
-            <a
-              className="text-sm font-semibold text-[#252525] transition-colors hover:text-[#777777] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#111111]"
-              href={item.href}
-              key={item.label}
-            >
-              {item.label}
-            </a>
-          ))}
+          {user?.role === "MENTOR" ? (
+            <>
+              <Link
+                className="text-sm font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                href="/search"
+              >
+                Find Peers & Mentors
+              </Link>
+              <Link
+                className="text-sm font-bold text-blue-600 transition-colors hover:text-blue-800 flex items-center gap-1.5"
+                href="/mentor/dashboard"
+              >
+                <span className="size-1.5 rounded-full bg-blue-600 animate-pulse" />
+                <span>Mentor Studio</span>
+              </Link>
+              <Link
+                className="text-sm font-semibold text-amber-700 transition-colors hover:text-amber-900 flex items-center gap-1"
+                href="/assessment?quiz=mentor_accreditation"
+              >
+                <span>👑 AI Accreditation</span>
+              </Link>
+              <Link
+                className="text-sm font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                href="/community"
+              >
+                Community Projects
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                className="text-sm font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                href="/search"
+              >
+                Find Mentors
+              </Link>
+              <Link
+                className="text-sm font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                href="/assessment"
+              >
+                AI Skill Assessment
+              </Link>
+              <Link
+                className="text-sm font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                href="/roadmap"
+              >
+                Career Roadmap
+              </Link>
+              <Link
+                className="text-sm font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                href="/community"
+              >
+                Community Projects
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="ml-auto flex items-center gap-2 sm:gap-4">
           {!isLoading && user ? (
             <div className="flex items-center gap-3">
+              {user.role === "MENTOR" && (
+                <Link
+                  href="/mentor/dashboard"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02]"
+                >
+                  <span>+ Post Skill Ad</span>
+                </Link>
+              )}
               <Link
                 href="/messages"
                 className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -51,12 +106,22 @@ export default function SiteHeader() {
                 </svg>
                 <span>Messages</span>
               </Link>
-              <div className="flex flex-col items-end">
-                <span className="text-sm font-bold text-[#151515]">{user.name}</span>
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-blue-700">
-                  {user.role}
-                </span>
-              </div>
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-1.5 transition hover:bg-slate-100/80"
+              >
+                <div className="flex flex-col items-start leading-tight">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-[#151515]">{user.name}</span>
+                    <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[9px] font-semibold text-blue-700">
+                      {user.role}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-amber-600">
+                    ⚡ {user.xp || 0} XP
+                  </span>
+                </div>
+              </Link>
               <button
                 onClick={() => logout()}
                 className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100"
@@ -99,24 +164,86 @@ export default function SiteHeader() {
           id="mobile-navigation"
         >
           <nav aria-label="Mobile primary navigation" className="flex flex-col">
-            {navigation.map((item) => (
-              <a
-                className="border-b border-black/[0.09] py-4 text-base font-semibold text-[#252525] transition-colors hover:text-[#777777] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#111111]"
-                href={item.href}
-                key={item.label}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
+            {user?.role === "MENTOR" ? (
+              <>
+                <Link
+                  className="border-b border-black/[0.09] py-4 text-base font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                  href="/search"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Find Peers & Mentors
+                </Link>
+                <Link
+                  className="border-b border-black/[0.09] py-4 text-base font-bold text-blue-600 flex items-center justify-between transition-colors hover:text-blue-700"
+                  href="/mentor/dashboard"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span>Mentor Studio (+ Post Ad)</span>
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">★ Mentor</span>
+                </Link>
+                <Link
+                  className="border-b border-black/[0.09] py-4 text-base font-bold text-amber-700 flex items-center justify-between transition-colors hover:text-amber-800"
+                  href="/assessment?quiz=mentor_accreditation"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span>AI Mentor Accreditation & Rating</span>
+                  <span className="text-amber-600">👑</span>
+                </Link>
+                <Link
+                  className="border-b border-black/[0.09] py-4 text-base font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                  href="/community"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Community Projects
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  className="border-b border-black/[0.09] py-4 text-base font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                  href="/search"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Find Mentors
+                </Link>
+                <Link
+                  className="border-b border-black/[0.09] py-4 text-base font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                  href="/assessment"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  AI Skill Assessment
+                </Link>
+                <Link
+                  className="border-b border-black/[0.09] py-4 text-base font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                  href="/roadmap"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Career Roadmap
+                </Link>
+                <Link
+                  className="border-b border-black/[0.09] py-4 text-base font-semibold text-[#252525] transition-colors hover:text-[#777777]"
+                  href="/community"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Community Projects
+                </Link>
+              </>
+            )}
           </nav>
           <div className="mt-6">
             {!isLoading && user ? (
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-sm">{user.name}</p>
-                  <p className="text-xs text-gray-500">{user.role}</p>
-                </div>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block"
+                >
+                  <p className="font-semibold text-sm text-slate-900">{user.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-gray-500">{user.role}</span>
+                    <span className="text-[10px] font-bold text-amber-600">⚡ {user.xp || 0} XP</span>
+                  </div>
+                </Link>
                 <button
                   className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-semibold"
                   onClick={() => {

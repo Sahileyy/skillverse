@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
 
@@ -255,29 +256,251 @@ export const CAREER_PATHWAYS: Record<string, CareerPathway> = {
 };
 
 export default function AIRoadmapView() {
+  const searchParams = useSearchParams();
   const openLoginModal = useLoginModal();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
-  const [selectedPathwayKey, setSelectedPathwayKey] = useState<string>("fullstack");
-  const [completedMilestones, setCompletedMilestones] = useState<Record<string, boolean>>({
-    "m-1": true,
-    "m-ai-1": true,
-    "m-ui-1": true,
+  const fromAssessment = searchParams.get("fromAssessment") === "1";
+  const assessmentQuiz = searchParams.get("quiz");
+  const assessmentScoreRaw = searchParams.get("score");
+  const assessmentScore = assessmentScoreRaw !== null ? parseInt(assessmentScoreRaw, 10) : null;
+  const assessmentSkill = searchParams.get("skill") || "Technical Assessment";
+  const assessmentLevel = searchParams.get("level") || "Proficient Practitioner";
+  const assessmentVerified = searchParams.get("verified") === "1";
+  const paramCareer = searchParams.get("career");
+
+  const [dismissAssessmentBanner, setDismissAssessmentBanner] = useState(false);
+
+  // Initial pathway
+  const initialPathwayKey = React.useMemo(() => {
+    if (paramCareer && CAREER_PATHWAYS[paramCareer]) return paramCareer;
+    if (assessmentQuiz === "python" || assessmentSkill.toLowerCase().includes("python")) return "aiml";
+    if (assessmentQuiz === "react" || assessmentQuiz === "dsa") return "fullstack";
+    return "fullstack";
+  }, [paramCareer, assessmentQuiz, assessmentSkill]);
+
+  const [selectedPathwayKey, setSelectedPathwayKey] = useState<string>(initialPathwayKey);
+
+  // Calibrate starting waypoint based on assessment score
+  const calibratedWaypointIndex = React.useMemo(() => {
+    if (assessmentScore !== null) {
+      if (assessmentScore >= 80) return 2; // Jump to Milestone 3 (Advanced/Expert)
+      if (assessmentScore >= 60) return 1; // Jump to Milestone 2 (Proficient)
+      return 0; // Milestone 1 (Foundational)
+    }
+    return 1;
+  }, [assessmentScore]);
+
+  const [activeWaypointIndex, setActiveWaypointIndex] = useState<number>(calibratedWaypointIndex);
+
+  const [completedMilestones, setCompletedMilestones] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {
+      "m-1": true,
+      "m-ai-1": true,
+      "m-ui-1": true,
+    };
+    if (assessmentScore !== null && assessmentScore >= 80) {
+      initial["m-2"] = true;
+      initial["m-ai-2"] = true;
+    }
+    return initial;
   });
 
-  const activePathway = CAREER_PATHWAYS[selectedPathwayKey] || CAREER_PATHWAYS.fullstack;
+  const [xpAlert, setXpAlert] = useState<{ message: string; amount: number } | null>(null);
+  const [goalMessage, setGoalMessage] = useState<string | null>(null);
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
 
-  const toggleMilestone = (id: string) => {
+  // Custom Groq AI Generated Pathways
+  const [customPathways, setCustomPathways] = useState<Record<string, CareerPathway>>({});
+  const [customRoleInput, setCustomRoleInput] = useState("");
+  const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState(false);
+  const [generateRoadmapError, setGenerateRoadmapError] = useState<string | null>(null);
+
+  const allPathways = React.useMemo(() => ({
+    ...CAREER_PATHWAYS,
+    ...customPathways,
+  }), [customPathways]);
+
+  const activePathway = allPathways[selectedPathwayKey] || CAREER_PATHWAYS.fullstack;
+
+  const handleGenerateCustomRoadmap = async () => {
+    if (!customRoleInput.trim()) return;
+    try {
+      setIsGeneratingRoadmap(true);
+      setGenerateRoadmapError(null);
+      const res = await fetch("/api/ai/career-guidance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetRole: customRoleInput.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.guidance) {
+        setGenerateRoadmapError(data.error || "Failed to generate roadmap.");
+        return;
+      }
+
+      type ApiMilestone = {
+        id: string;
+        stage: "BASELINE" | "SKILL_GAP" | "RECOMMENDED" | "CAPSTONE" | "TARGET";
+        title: string;
+        description: string;
+        skills: string[];
+        resources: string[];
+        recommendedMentorRole?: string;
+      };
+
+      const g = data.guidance;
+      const key = `custom-${Date.now()}`;
+      const newPathway: CareerPathway = {
+        id: key,
+        title: g.targetRole,
+        description: g.careerSummary,
+        targetRole: g.targetRole,
+        estimatedMonths: g.estimatedMonths,
+        marketDemand: g.marketDemand,
+        milestones: (g.milestones as ApiMilestone[]).map((m, idx) => ({
+          id: `${key}-m-${idx}`,
+          stage: m.stage,
+          title: m.title,
+          description: m.description,
+          skills: m.skills,
+          resources: m.resources,
+          recommendedMentor: {
+            id: "mentor-aarav",
+            name: m.recommendedMentorRole || "Domain Specialist Mentor",
+            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+            headline: `${m.recommendedMentorRole || "Domain Specialist"} • SkillVerse Mentor`,
+          },
+          isCompleted: idx === 0,
+        })),
+      };
+
+      setCustomPathways((prev) => ({ ...prev, [key]: newPathway }));
+      setSelectedPathwayKey(key);
+      setActiveWaypointIndex(1);
+      setCompletedMilestones((prev) => ({ ...prev, [`${key}-m-0`]: true }));
+      setCustomRoleInput("");
+    } catch {
+      setGenerateRoadmapError("Network error while generating career guidance.");
+    } finally {
+      setIsGeneratingRoadmap(false);
+    }
+  };
+
+  // Sync pathway based on user's profile career goal when not directly from assessment
+  const userGoal = user?.profile?.careerGoal;
+  const [prevUserGoal, setPrevUserGoal] = useState(userGoal);
+  if (!fromAssessment && prevUserGoal !== userGoal) {
+    setPrevUserGoal(userGoal);
+    if (userGoal) {
+      const goalLower = userGoal.toLowerCase();
+      if (goalLower.includes("ai") || goalLower.includes("machine") || goalLower.includes("data")) {
+        setSelectedPathwayKey("aiml");
+      } else if (goalLower.includes("design") || goalLower.includes("ui") || goalLower.includes("ux")) {
+        setSelectedPathwayKey("uiux");
+      } else if (goalLower.includes("full") || goalLower.includes("web") || goalLower.includes("frontend") || goalLower.includes("backend")) {
+        setSelectedPathwayKey("fullstack");
+      }
+    }
+  }
+
+  // Skill gap analysis
+  const userSkills = user?.profile?.skills || [];
+  const pathwaySkills = React.useMemo(() => {
+    return Array.from(new Set(activePathway.milestones.flatMap((m) => m.skills)));
+  }, [activePathway]);
+
+  const recommendedSkills = React.useMemo(() => {
+    const normalizedUserSkills = userSkills.map((s) => s.toLowerCase().trim());
+    return pathwaySkills.filter(
+      (skill) => !normalizedUserSkills.includes(skill.toLowerCase().trim())
+    );
+  }, [pathwaySkills, userSkills]);
+
+  const toggleMilestone = async (nodeId: string, nodeTitle: string) => {
+    const currentCompleted = Boolean(
+      completedMilestones[nodeId] ||
+      user?.completedActivities?.includes(`milestone:${selectedPathwayKey}:${nodeId}`)
+    );
+
     setCompletedMilestones((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      [nodeId]: !currentCompleted,
     }));
+
+    if (user) {
+      try {
+        const res = await fetch("/api/roadmap/milestone-toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pathwayId: selectedPathwayKey,
+            milestoneId: nodeId,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          if (data.xpAwarded && data.xpAwarded > 0) {
+            setXpAlert({
+              amount: data.xpAwarded,
+              message: `Completed "${nodeTitle}"!`,
+            });
+          }
+          await refreshUser();
+        }
+      } catch (err) {
+        console.error("Failed to toggle milestone:", err);
+      }
+    }
+  };
+
+  const handleSaveGoalToProfile = async () => {
+    if (!user) {
+      openLoginModal();
+      return;
+    }
+    setIsSavingGoal(true);
+    setGoalMessage(null);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: user.name,
+          education: user.profile?.education || null,
+          headline: user.profile?.headline || null,
+          bio: user.profile?.bio || null,
+          skills: user.profile?.skills || [],
+          interests: user.profile?.interests || [],
+          careerGoal: activePathway.title,
+          image: user.image || null,
+          githubUrl: user.profile?.githubUrl || null,
+          linkedinUrl: user.profile?.linkedinUrl || null,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setGoalMessage(`Target career goal set to "${activePathway.title}" on your profile!`);
+        await refreshUser();
+      }
+    } catch {
+      setGoalMessage("Failed to update goal. Please try again.");
+    } finally {
+      setIsSavingGoal(false);
+    }
   };
 
   // Progress metrics
   const totalMilestones = activePathway.milestones.length;
-  const finishedCount = activePathway.milestones.filter(
-    (m) => completedMilestones[m.id] || m.isCompleted
+  const finishedCount = activePathway.milestones.filter((m) =>
+    Boolean(
+      completedMilestones[m.id] ||
+      m.isCompleted ||
+      user?.completedActivities?.includes(`milestone:${selectedPathwayKey}:${m.id}`)
+    )
   ).length;
   const progressPercent = Math.round((finishedCount / totalMilestones) * 100);
 
@@ -293,6 +516,35 @@ export default function AIRoadmapView() {
           <span className="text-slate-900 font-semibold">AI Career Guidance</span>
         </div>
 
+        {/* Mentor Advisory Banner */}
+        {user?.role === "MENTOR" && (
+          <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50/80 p-4 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">👑</span>
+              <div>
+                <p className="font-bold">You are signed in as a Verified Mentor</p>
+                <p className="text-[11px] text-amber-800">
+                  Career Roadmaps are student-facing progression paths. You can publish skill ads in Mentor Studio or evaluate your own competency level.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href="/mentor/dashboard"
+                className="rounded-xl bg-slate-900 px-3.5 py-1.5 font-bold text-white hover:bg-slate-800 text-xs"
+              >
+                Mentor Studio →
+              </Link>
+              <Link
+                href="/assessment?quiz=mentor_accreditation"
+                className="rounded-xl border border-amber-300 bg-white px-3 py-1.5 font-bold text-amber-900 hover:bg-amber-100 text-xs"
+              >
+                Accreditation Test →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Header Title */}
         <div className="text-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
@@ -303,9 +555,125 @@ export default function AIRoadmapView() {
           </p>
         </div>
 
+        {/* ASSESSMENT CALIBRATION BANNER */}
+        {fromAssessment && !dismissAssessmentBanner && (
+          <div className="mt-8 rounded-3xl border border-indigo-300 bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 p-6 sm:p-7 text-white shadow-lg animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+              <div className="flex items-start gap-4">
+                <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white text-2xl shadow-md">
+                  🎯
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-emerald-500/20 border border-emerald-400/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                      Assessment Result Applied
+                    </span>
+                    <span className="text-xs text-indigo-200">
+                      Skill: {assessmentSkill}
+                    </span>
+                    {assessmentVerified && (
+                      <span className="rounded-full bg-indigo-500/30 border border-indigo-400/30 px-2 py-0.5 text-[10px] font-semibold text-indigo-100">
+                        ✓ AI-Verified Status
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mt-2 text-xl font-extrabold text-white">
+                    Direct Career Path Navigation Calibrated
+                  </h3>
+                  <p className="mt-1.5 text-xs text-indigo-100 leading-relaxed max-w-2xl">
+                    You scored <strong className="text-white">{assessmentScore}% ({assessmentLevel})</strong>. Your career roadmap has been calibrated directly according to this result:
+                    {assessmentScore !== null && assessmentScore >= 80 ? (
+                      <span className="ml-1 text-emerald-300 font-medium">Foundational hurdles bypassed. Active route starts at <strong>Stop 3: Database Modeling & Advanced Architecture</strong>.</span>
+                    ) : assessmentScore !== null && assessmentScore >= 60 ? (
+                      <span className="ml-1 text-indigo-200 font-medium">Core fundamentals validated. Active route focused on <strong>Stop 2: Architecture & Next.js Mastery</strong>.</span>
+                    ) : (
+                      <span className="ml-1 text-amber-200 font-medium">Core gaps identified. Route initiates at <strong>Stop 1: Fundamentals</strong> for essential prerequisite reinforcement.</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <Link
+                  href="/assessment"
+                  className="rounded-xl border border-indigo-400/40 bg-indigo-900/60 hover:bg-indigo-900 px-4 py-2 text-xs font-bold text-white transition"
+                >
+                  Review Quiz
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setDismissAssessmentBanner(true)}
+                  className="rounded-xl bg-white/10 hover:bg-white/20 px-3 py-2 text-xs font-semibold text-indigo-200 transition"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dynamic Groq AI Career Pathway Generator */}
+        <div className="mt-8 rounded-3xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-purple-50/50 to-white p-6 sm:p-7 shadow-xs">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-indigo-100">
+            <div className="flex items-center gap-3">
+              <div className="flex size-11 items-center justify-center rounded-2xl bg-indigo-600 text-white font-bold text-xl shadow-xs">
+                🧭
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-indigo-100 border border-indigo-200 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 uppercase tracking-wide">
+                    Groq Career Guidance
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">Personalized AI Roadmap</span>
+                </div>
+                <h3 className="text-base font-extrabold text-slate-900 mt-0.5">
+                  Targeting a Specific Dream Role? Generate a Custom AI Pathway
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              value={customRoleInput}
+              onChange={(e) => setCustomRoleInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && customRoleInput.trim() && !isGeneratingRoadmap) {
+                  e.preventDefault();
+                  handleGenerateCustomRoadmap();
+                }
+              }}
+              placeholder="Enter your target role: e.g. Cloud Security Architect, AI Systems Engineer, Quant Developer..."
+              className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-900 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+            />
+            <button
+              type="button"
+              onClick={handleGenerateCustomRoadmap}
+              disabled={isGeneratingRoadmap || !customRoleInput.trim()}
+              className="rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02] disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+            >
+              {isGeneratingRoadmap ? (
+                <>
+                  <div className="size-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span>Analyzing with Groq...</span>
+                </>
+              ) : (
+                <>
+                  <span>⚡ Generate AI Roadmap</span>
+                  <span>→</span>
+                </>
+              )}
+            </button>
+          </div>
+          {generateRoadmapError && (
+            <p className="mt-2 text-xs font-medium text-red-600">{generateRoadmapError}</p>
+          )}
+        </div>
+
         {/* 1. CAREER PATHWAY SELECTOR */}
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          {Object.values(CAREER_PATHWAYS).map((path) => (
+          {Object.values(allPathways).map((path) => (
             <button
               key={path.id}
               type="button"
@@ -326,6 +694,34 @@ export default function AIRoadmapView() {
             </button>
           ))}
         </div>
+
+        {/* XP Celebration Banner */}
+        {xpAlert && (
+          <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 shadow-xs flex items-center justify-between animate-fade-in">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 font-black text-lg">
+                ⚡
+              </span>
+              <div>
+                <p className="font-bold text-sm">+{xpAlert.amount} XP Earned!</p>
+                <p className="text-xs text-amber-800">{xpAlert.message}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setXpAlert(null)}
+              className="text-xs font-semibold text-amber-700 hover:text-amber-900"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {goalMessage && (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">
+            {goalMessage}
+          </div>
+        )}
 
         {/* Pathway Summary Card */}
         <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
@@ -371,6 +767,290 @@ export default function AIRoadmapView() {
           </div>
         </div>
 
+        {/* Skill Gap Analysis Box */}
+        <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs sm:p-7">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-5">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Your Target Career Goal</span>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-base font-extrabold text-slate-900">
+                  {user?.profile?.careerGoal || activePathway.title}
+                </span>
+                {user?.profile?.careerGoal === activePathway.title && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                    Active Goal
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSaveGoalToProfile}
+              disabled={isSavingGoal || user?.profile?.careerGoal === activePathway.title}
+              className="h-9 px-4 rounded-xl bg-slate-900 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-40"
+            >
+              {isSavingGoal ? "Saving..." : user?.profile?.careerGoal === activePathway.title ? "✓ Saved on Profile" : "Set as My Career Goal"}
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <div>
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Your Current Skills (from Profile)</h4>
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {userSkills.length > 0 ? (
+                  userSkills.map((skill) => (
+                    <span key={skill} className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-800">
+                      {skill}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-400 italic">No profile skills yet. Add skills in your <Link href="/profile" className="text-blue-600 underline">Profile</Link>.</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-bold text-amber-700 uppercase tracking-wider">Recommended Skills to Acquire</h4>
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {recommendedSkills.length > 0 ? (
+                  recommendedSkills.slice(0, 8).map((skill) => (
+                    <span key={skill} className="rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                      + {skill}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-xs text-emerald-600 font-semibold">✓ You already cover all core skills in this roadmap!</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Demo Transparency Note */}
+        <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-xs text-indigo-900 flex items-center gap-3">
+          <span className="text-base">💡</span>
+          <div>
+            <span className="font-bold">College Demo Career Roadmap:</span>
+            <span className="ml-1 text-indigo-800">
+              Deterministic milestone progression matching student profile skills and target career positions. Complete milestones to earn +5 XP each!
+            </span>
+          </div>
+        </div>
+
+        {/* INTERACTIVE GPS ROUTE NAVIGATION COCKPIT */}
+        {(() => {
+          const safeWaypointIndex = Math.min(activeWaypointIndex, activePathway.milestones.length - 1);
+          const currentWaypoint = activePathway.milestones[safeWaypointIndex] || activePathway.milestones[0];
+          const isCurrentWaypointDone = Boolean(
+            completedMilestones[currentWaypoint.id] ||
+            currentWaypoint.isCompleted ||
+            user?.completedActivities?.includes(`milestone:${selectedPathwayKey}:${currentWaypoint.id}`)
+          );
+
+          const scrollToMilestone = (nodeId: string, idx: number) => {
+            setActiveWaypointIndex(idx);
+            const el = document.getElementById(`milestone-${nodeId}`);
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          };
+
+          return (
+            <div className="mt-10 overflow-hidden rounded-3xl border border-indigo-200 bg-white shadow-md">
+              {/* Cockpit Status Bar */}
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 p-5 sm:p-6 text-white">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/30 border border-indigo-400/40 text-xl font-bold">
+                      🧭
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-emerald-500/20 border border-emerald-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                          Live Navigation Active
+                        </span>
+                        {fromAssessment && (
+                          <span className="rounded-full bg-indigo-400/20 border border-indigo-400/30 px-2 py-0.5 text-[10px] font-semibold text-indigo-200">
+                            Calibrated to Assessment
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="mt-1 text-base font-extrabold text-white sm:text-lg">
+                        Route: {activePathway.targetRole}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-xs font-semibold text-indigo-100 sm:border-l sm:border-indigo-800/80 sm:pl-6">
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-indigo-300">Active Waypoint</p>
+                      <p className="text-white font-bold">Stop {safeWaypointIndex + 1} of {activePathway.milestones.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-indigo-300">Route ETA</p>
+                      <p className="text-white font-bold">{activePathway.estimatedMonths}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Turn-by-Turn Waypoint Rails (Interactive Stepper) */}
+                <div className="mt-6 border-t border-indigo-800/60 pt-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-300 mb-3">
+                    Turn-by-Turn Waypoints (Click to inspect stop):
+                  </p>
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    {activePathway.milestones.map((m, idx) => {
+                      const isDone = Boolean(
+                        completedMilestones[m.id] ||
+                        m.isCompleted ||
+                        user?.completedActivities?.includes(`milestone:${selectedPathwayKey}:${m.id}`)
+                      );
+                      const isActive = idx === safeWaypointIndex;
+
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => scrollToMilestone(m.id, idx)}
+                          className={`group flex items-center gap-2 rounded-xl px-3 py-2 text-left transition shrink-0 ${
+                            isActive
+                              ? "bg-white text-slate-900 shadow-md ring-2 ring-indigo-400 font-bold"
+                              : isDone
+                              ? "bg-indigo-900/50 hover:bg-indigo-900/80 text-emerald-300 border border-emerald-500/30"
+                              : "bg-indigo-950/60 hover:bg-indigo-900/40 text-indigo-200 border border-indigo-800/40"
+                          }`}
+                        >
+                          <span
+                            className={`flex size-6 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
+                              isActive
+                                ? "bg-indigo-600 text-white"
+                                : isDone
+                                ? "bg-emerald-500 text-white"
+                                : "bg-slate-800 text-slate-300"
+                            }`}
+                          >
+                            {isDone ? "✓" : isActive ? "📍" : idx + 1}
+                          </span>
+                          <div className="max-w-[130px] truncate text-[11px]">
+                            <p className="truncate font-semibold">{m.title.replace(/^[0-9]+\.\s*/, "")}</p>
+                            <p className={`text-[9px] uppercase tracking-wider font-bold ${
+                              isActive ? "text-indigo-600" : isDone ? "text-emerald-400" : "text-indigo-300/70"
+                            }`}>
+                              {isActive ? "Current Stop" : isDone ? "Cleared" : `Stop ${idx + 1}`}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Waypoint HUD Card ("Turn-by-Turn Directions") */}
+              <div className="p-6 sm:p-7 bg-slate-50/50">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-md bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-800">
+                        🧭 Turn-by-Turn GPS Focus
+                      </span>
+                      <span className="text-xs font-semibold text-slate-500">
+                        Waypoint {safeWaypointIndex + 1} of {activePathway.milestones.length}
+                      </span>
+                      {isCurrentWaypointDone && (
+                        <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                          ✓ Waypoint Cleared
+                        </span>
+                      )}
+                    </div>
+
+                    <h4 className="mt-2 text-lg font-bold text-slate-900">
+                      {currentWaypoint.title}
+                    </h4>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-600 max-w-2xl">
+                      {currentWaypoint.description}
+                    </p>
+
+                    {/* Contextual assessment guidance */}
+                    {fromAssessment && assessmentScore !== null && (
+                      <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/70 p-3 text-xs text-indigo-900 max-w-2xl">
+                        <span className="font-bold">GPS Route Calibration:</span>{" "}
+                        {assessmentScore >= 80 ? (
+                          <span>With an <strong>Expert score ({assessmentScore}%)</strong> in {assessmentSkill}, you have bypassed early foundational stops. Focus here on mastering scalable architecture and data modeling.</span>
+                        ) : assessmentScore >= 60 ? (
+                          <span>With a <strong>Proficient score ({assessmentScore}%)</strong> in {assessmentSkill}, your foundations are verified. This waypoint bridges advanced component patterns and system gotchas.</span>
+                        ) : (
+                          <span>Based on your <strong>Foundational score ({assessmentScore}%)</strong> in {assessmentSkill}, this waypoint strengthens prerequisite concepts before tackling full-scale production modules.</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Waypoint Stepper Buttons */}
+                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (safeWaypointIndex > 0) {
+                          const prevIdx = safeWaypointIndex - 1;
+                          scrollToMilestone(activePathway.milestones[prevIdx].id, prevIdx);
+                        }
+                      }}
+                      disabled={safeWaypointIndex === 0}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition"
+                    >
+                      ← Previous Stop
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await toggleMilestone(currentWaypoint.id, currentWaypoint.title);
+                        if (safeWaypointIndex < activePathway.milestones.length - 1) {
+                          const nextIdx = safeWaypointIndex + 1;
+                          scrollToMilestone(activePathway.milestones[nextIdx].id, nextIdx);
+                        }
+                      }}
+                      className={`rounded-xl px-4 py-2 text-xs font-bold shadow-xs transition ${
+                        isCurrentWaypointDone
+                          ? "border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                          : "bg-indigo-600 text-white hover:bg-indigo-700"
+                      }`}
+                    >
+                      {isCurrentWaypointDone ? "✓ Waypoint Cleared" : "Mark Cleared & Proceed → (+5 XP)"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (safeWaypointIndex < activePathway.milestones.length - 1) {
+                          const nextIdx = safeWaypointIndex + 1;
+                          scrollToMilestone(activePathway.milestones[nextIdx].id, nextIdx);
+                        }
+                      }}
+                      disabled={safeWaypointIndex === activePathway.milestones.length - 1}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition"
+                    >
+                      Next Stop →
+                    </button>
+                  </div>
+                </div>
+
+                {/* Skills required at this waypoint */}
+                <div className="mt-4 pt-4 border-t border-slate-200/60 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="font-bold text-slate-700 text-[11px] uppercase tracking-wider">Required Skills:</span>
+                  {currentWaypoint.skills.map((s) => (
+                    <span key={s} className="rounded-md border border-slate-200 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* 2. VISUAL NODE PROGRESSION GRAPH (roadmap.sh inspired layout) */}
         <div className="mt-10 space-y-6">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -380,41 +1060,56 @@ export default function AIRoadmapView() {
           <div className="relative border-l-2 border-indigo-200 ml-4 pl-6 space-y-8">
             {activePathway.milestones.map((node, index) => {
               const isNodeDone = completedMilestones[node.id] || node.isCompleted;
+              const safeWaypointIndex = Math.min(activeWaypointIndex, activePathway.milestones.length - 1);
+              const isActiveWaypoint = index === safeWaypointIndex;
 
               return (
-                <div key={node.id} className="relative group">
+                <div key={node.id} id={`milestone-${node.id}`} className="relative group scroll-mt-24">
                   {/* Node Circle Indicator */}
                   <button
                     type="button"
-                    onClick={() => toggleMilestone(node.id)}
-                    title={isNodeDone ? "Mark as in-progress" : "Mark as completed"}
+                    onClick={() => {
+                      setActiveWaypointIndex(index);
+                      toggleMilestone(node.id, node.title);
+                    }}
+                    title={isNodeDone ? "Mark as in-progress" : "Mark as completed (+5 XP)"}
                     className={`absolute -left-[35px] top-1.5 flex size-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
                       isNodeDone
                         ? "bg-emerald-600 text-white shadow-xs"
+                        : isActiveWaypoint
+                        ? "bg-indigo-600 text-white ring-4 ring-indigo-200 animate-pulse"
                         : node.stage === "SKILL_GAP"
                         ? "bg-amber-500 text-white ring-4 ring-amber-100"
                         : "border-2 border-indigo-500 bg-white text-indigo-600"
                     }`}
                   >
-                    {isNodeDone ? "✓" : index + 1}
+                    {isNodeDone ? "✓" : isActiveWaypoint ? "📍" : index + 1}
                   </button>
 
                   {/* Milestone Card */}
                   <div
-                    className={`rounded-3xl border p-6 transition-all ${
-                      isNodeDone
+                    onClick={() => setActiveWaypointIndex(index)}
+                    className={`rounded-3xl border p-6 transition-all cursor-pointer ${
+                      isActiveWaypoint
+                        ? "border-indigo-500 bg-indigo-50/30 ring-2 ring-indigo-400 shadow-md"
+                        : isNodeDone
                         ? "border-emerald-200 bg-emerald-50/20"
                         : node.stage === "SKILL_GAP"
                         ? "border-amber-200 bg-white shadow-md ring-1 ring-amber-100"
                         : node.stage === "TARGET"
                         ? "border-indigo-300 bg-gradient-to-r from-indigo-50/60 to-white shadow-sm"
-                        : "border-slate-200 bg-white shadow-xs"
+                        : "border-slate-200 bg-white shadow-xs hover:border-slate-300"
                     }`}
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         {/* Stage Badges */}
                         <div className="flex items-center gap-2">
+                          {isActiveWaypoint && (
+                            <span className="rounded bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white animate-pulse">
+                              📍 Current Navigation Waypoint
+                            </span>
+                          )}
                           {node.stage === "BASELINE" && (
                             <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
                               Current Baseline
@@ -459,14 +1154,14 @@ export default function AIRoadmapView() {
                       {/* Complete Checkbox Toggle */}
                       <button
                         type="button"
-                        onClick={() => toggleMilestone(node.id)}
+                        onClick={() => toggleMilestone(node.id, node.title)}
                         className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                           isNodeDone
                             ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                            : "border-slate-200 bg-slate-900 text-white hover:bg-slate-800"
                         }`}
                       >
-                        <span>{isNodeDone ? "Completed" : "Mark as Done"}</span>
+                        <span>{isNodeDone ? "✓ Completed" : "Mark Done (+5 XP)"}</span>
                       </button>
                     </div>
 

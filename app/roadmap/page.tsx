@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import AIRoadmapView from "@/components/roadmap/ai-roadmap-view";
 import LoginModalProvider from "@/components/auth/login-modal-provider";
 import SiteHeader from "@/components/layout/site-header";
@@ -13,7 +14,18 @@ export default function RoadmapPage() {
     <main className="min-h-screen bg-white font-sans text-slate-900">
       <LoginModalProvider>
         <SiteHeader />
-        <AIRoadmapView />
+        <Suspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <div className="flex items-center gap-3 text-sm font-semibold text-slate-500">
+                <span className="size-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                Loading Career Path Navigation...
+              </div>
+            </div>
+          }
+        >
+          <AIRoadmapView />
+        </Suspense>
         <SiteFooter />
       </LoginModalProvider>
     </main>

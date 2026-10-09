@@ -151,6 +151,22 @@ const RECENT_REVIEWS = [
   },
 ];
 
+function AirbnbLogo({ className = "size-7" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" fill="#FF385C" aria-hidden="true">
+      <path d="M16 1c2.008 0 3.463.963 4.751 3.269l.533.982c2.227 4.148 4.606 8.924 5.922 13.069 1.139 3.593.639 6.892-1.393 9.213-1.854 2.119-4.524 3.26-7.513 3.26-3.088 0-5.803-1.164-7.669-3.328-1.95-2.261-2.434-5.46-1.341-8.995 1.298-4.2 3.659-8.985 5.894-13.161l.532-.979C12.186 2.012 13.791 1 16 1zm0 2.2c-1.314 0-2.316.634-3.239 2.279l-.513.945C10.08 10.457 7.784 15.11 6.55 19.1c-.911 2.949-.519 5.485 1.031 7.285 1.442 1.671 3.619 2.607 6.119 2.607 2.399 0 4.549-.916 6.04-2.62 1.572-1.797 1.977-4.425 1.09-7.227-1.258-3.99-3.568-8.625-5.783-12.75l-.513-.948C17.688 3.868 17.135 3.2 16 3.2zm0 8.8c3.204 0 5.8 2.596 5.8 5.8 0 2.267-1.374 4.57-3.504 6.877-.734.796-1.527 1.551-2.296 2.257-.769-.706-1.562-1.461-2.296-2.257C11.574 22.37 10.2 20.067 10.2 17.8c0-3.204 2.596-5.8 5.8-5.8zm0 2.2c-1.988 0-3.6 1.612-3.6 3.6 0 1.488.983 3.197 2.628 5.039.349.392.698.767 1.026 1.112.328-.345.677-.72 1.026-1.112C18.617 21.797 19.6 20.088 19.6 18.6c0-1.988-1.612-3.6-3.6-3.6z" />
+    </svg>
+  );
+}
+
+function AppleLogo({ className = "size-7" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 170 170" fill="#000000" aria-hidden="true">
+      <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.67-7.81-11.96-14.31-7.16-10.9-12.87-23.6-17.13-38.11-4.26-14.5-6.39-28.05-6.39-40.64 0-16.14 4.09-29.67 12.28-40.59 8.19-10.92 18.39-16.48 30.6-16.69 4.36 0 9.29 1.15 14.81 3.44 5.51 2.29 9.35 3.49 11.51 3.6 2.45-.22 6.53-1.48 12.24-3.79 5.71-2.31 10.42-3.35 14.13-3.12 13.9.64 24.87 5.73 32.91 15.26-12.28 7.42-18.28 17.52-18 30.3.28 10.02 4.18 18.31 11.7 24.88 7.52 6.57 16.38 10.28 26.58 11.13-2.6 7.6-5.88 15.15-9.84 22.65zM119.22 31.81c0-7.39 2.65-14.37 7.96-20.94 5.3-6.57 11.83-10.63 19.57-12.18.22 1.3.33 2.49.33 3.58 0 7.39-2.82 14.59-8.47 21.6-5.65 7.01-12.42 11.02-20.31 12.02-.33-1.41-.5-2.67-.5-3.78z" />
+    </svg>
+  );
+}
+
 export default function HomeSections() {
   const router = useRouter();
   const openLoginModal = useLoginModal();
@@ -159,6 +175,10 @@ export default function HomeSections() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [activeProjectTab, setActiveProjectTab] = useState<string | null>(null);
+
+  // Card save bookmark toggles matching the reference design
+  const [card1Saved, setCard1Saved] = useState(false);
+  const [card2Saved, setCard2Saved] = useState(true);
 
   // Mobile "View More" toggle states
   const [showAllMentorsMobile, setShowAllMentorsMobile] = useState(false);
@@ -587,7 +607,7 @@ export default function HomeSections() {
       </section>
 
       {/* 5. AI SUITE: Skill Assessment & Career Roadmap */}
-      <section id="ai-tools" className="border-t border-slate-200 bg-gradient-to-b from-white to-slate-50/80 px-4 py-12 sm:px-8 sm:py-20">
+      <section id="ai-tools" className="border-t border-slate-200 bg-[#f7f8fa] px-4 py-12 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="text-center">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -598,105 +618,183 @@ export default function HomeSections() {
             </p>
           </div>
 
-          <div className="mt-8 sm:mt-12 grid gap-6 sm:gap-8 lg:grid-cols-2">
+          <div className="mt-8 sm:mt-12 grid gap-6 sm:gap-8 md:grid-cols-2 max-w-4xl mx-auto">
             {/* Tool 1: AI Skill Assessment */}
-            <div className="flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-blue-200/70 bg-gradient-to-br from-blue-50/40 via-white to-white p-5 sm:p-8 shadow-xs">
+            <div className="flex flex-col justify-between rounded-[32px] border border-black/[0.04] bg-white p-6 sm:p-8 shadow-[0_12px_36px_rgba(0,0,0,0.05)] transition-all hover:shadow-[0_16px_44px_rgba(0,0,0,0.08)]">
               <div>
+                {/* Top Row: Circular Logo + Save Button */}
                 <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold text-blue-800">
-                    AI Skill Quiz
-                  </span>
-                  <span className="text-[11px] sm:text-xs font-medium text-blue-600">5 Questions</span>
+                  <div className="flex size-14 items-center justify-center rounded-full border border-black/[0.08] bg-white p-3 shadow-2xs">
+                    <AirbnbLogo className="size-7" />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCard1Saved(!card1Saved)}
+                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs transition-colors cursor-pointer ${
+                      card1Saved
+                        ? "bg-[#e5e7eb]/90 font-semibold text-neutral-900 shadow-2xs"
+                        : "border border-black/10 bg-white font-medium text-neutral-600 hover:bg-neutral-50 shadow-2xs"
+                    }`}
+                  >
+                    <span>{card1Saved ? "Saved" : "Save"}</span>
+                    <svg
+                      className="size-3.5"
+                      viewBox="0 0 24 24"
+                      fill={card1Saved ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth={card1Saved ? 0 : 2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                      />
+                    </svg>
+                  </button>
                 </div>
 
-                <h3 className="mt-4 sm:mt-5 text-base sm:text-xl font-bold text-slate-900">
-                  AI-Verified Skill Assessment
-                </h3>
-                <p className="mt-1.5 sm:mt-2 text-xs leading-relaxed text-slate-600">
-                  Take a 5-minute technical evaluation on Python, React, DSA, or System Design. Earn a verified skill badge directly on your SkillVerse profile.
-                </p>
-
-                {/* Interactive Assessment Preview Box */}
-                <div className="mt-4 sm:mt-6 rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-700">Question 3 of 5</span>
-                    <span className="text-emerald-600 font-semibold text-[11px]">Live Evaluation</span>
+                {/* Metadata & Title */}
+                <div className="mt-5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] sm:text-sm font-semibold text-neutral-900">
+                      Airbnb
+                    </span>
+                    <span className="text-xs font-normal text-neutral-400">
+                      5 days ago
+                    </span>
                   </div>
-                  <p className="mt-2 text-xs font-medium text-slate-800">
-                    &quot;How does the JavaScript event loop handle microtasks vs macrotasks during execution?&quot;
+
+                  <h3 className="mt-1.5 text-lg sm:text-[21px] font-bold tracking-tight text-neutral-900">
+                    Junior UI/UX Designer
+                  </h3>
+                  <p className="mt-0.5 text-xs font-semibold text-rose-600">
+                    AI Skill Assessment Track
                   </p>
-                  <div className="mt-2.5 space-y-1.5">
-                    <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-2 sm:p-2.5 text-[10px] sm:text-[11px] font-medium text-blue-900">
-                      A. Microtasks (Promises) run before the next macrotask (setTimeout)
-                    </div>
-                    <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 sm:p-2.5 text-[10px] sm:text-[11px] text-slate-600">
-                      B. Both queues execute simultaneously using web workers
-                    </div>
+
+                  {/* Pill Tags */}
+                  <div className="mt-3.5 flex flex-wrap items-center gap-2">
+                    <span className="rounded-xl bg-[#f2f4f7] px-3.5 py-1.5 text-xs font-medium text-neutral-700">
+                      Contract
+                    </span>
+                    <span className="rounded-xl bg-[#f2f4f7] px-3.5 py-1.5 text-xs font-medium text-neutral-700">
+                      Remote
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <Link
-                href="/assessment"
-                className="mt-6 sm:mt-8 inline-flex h-10 sm:h-11 items-center justify-center rounded-xl bg-blue-600 px-5 sm:px-6 text-xs font-semibold text-white transition hover:bg-blue-700"
-              >
-                Start Skill Assessment →
-              </Link>
+              {/* Thin Divider & Bottom Row */}
+              <div className="mt-6">
+                <div className="border-t border-black/[0.06] pt-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-base sm:text-[17px] font-bold text-neutral-900">
+                        $100/hr
+                      </div>
+                      <div className="text-xs text-neutral-400 mt-0.5">
+                        Delhi, India
+                      </div>
+                    </div>
+
+                    <Link
+                      href="/assessment"
+                      className="inline-flex items-center justify-center rounded-xl bg-[#141414] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-black active:scale-[0.98] shadow-xs"
+                    >
+                      Apply now
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Tool 2: AI Career Guidance */}
-            <div className="flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-indigo-200/70 bg-gradient-to-br from-indigo-50/40 via-white to-white p-5 sm:p-8 shadow-xs">
+            <div className="flex flex-col justify-between rounded-[32px] border border-black/[0.04] bg-white p-6 sm:p-8 shadow-[0_12px_36px_rgba(0,0,0,0.05)] transition-all hover:shadow-[0_16px_44px_rgba(0,0,0,0.08)]">
               <div>
+                {/* Top Row: Circular Logo + Saved Button */}
                 <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold text-indigo-800">
-                    Career Roadmap
-                  </span>
-                  <span className="text-[11px] sm:text-xs font-medium text-indigo-600">Target Role Mapping</span>
-                </div>
-
-                <h3 className="mt-4 sm:mt-5 text-base sm:text-xl font-bold text-slate-900">
-                  AI Career Pathway Generator
-                </h3>
-                <p className="mt-1.5 sm:mt-2 text-xs leading-relaxed text-slate-600">
-                  Input your current skills and target position. SkillVerse identifies your gaps and suggests curated mentor sessions.
-                </p>
-
-                {/* Visual Roadmap Progression Nodes */}
-                <div className="mt-4 sm:mt-6 rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs">
-                  <div className="flex items-center justify-between text-xs border-b border-slate-100 pb-2">
-                    <span className="font-semibold text-slate-800">Full-Stack Developer Roadmap</span>
-                    <span className="text-[11px] sm:text-xs text-indigo-600 font-bold">4 Milestones</span>
+                  <div className="flex size-14 items-center justify-center rounded-full border border-black/[0.08] bg-white p-3 shadow-2xs">
+                    <AppleLogo className="size-7" />
                   </div>
 
-                  <div className="mt-3 space-y-2.5">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex size-5 sm:size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] sm:text-xs font-bold text-emerald-700">✓</span>
-                      <div className="text-xs">
-                        <span className="font-bold text-slate-800">Current:</span> HTML, CSS, JavaScript Basics
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex size-5 sm:size-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] sm:text-xs font-bold text-blue-700">2</span>
-                      <div className="text-xs">
-                        <span className="font-bold text-slate-800">Skill Gap:</span> React Hooks & Next.js App Router
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex size-5 sm:size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] sm:text-xs font-bold text-slate-600">3</span>
-                      <div className="text-xs text-slate-500">
-                        <span className="font-bold">Next:</span> PostgreSQL & Prisma ORM Modeling
-                      </div>
-                    </div>
+                  <button
+                    type="button"
+                    onClick={() => setCard2Saved(!card2Saved)}
+                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs transition-colors cursor-pointer ${
+                      card2Saved
+                        ? "bg-[#e5e7eb]/90 font-semibold text-neutral-900 shadow-2xs"
+                        : "border border-black/10 bg-white font-medium text-neutral-600 hover:bg-neutral-50 shadow-2xs"
+                    }`}
+                  >
+                    <span>{card2Saved ? "Saved" : "Save"}</span>
+                    <svg
+                      className="size-3.5"
+                      viewBox="0 0 24 24"
+                      fill={card2Saved ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth={card2Saved ? 0 : 2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Metadata & Title */}
+                <div className="mt-5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] sm:text-sm font-semibold text-neutral-900">
+                      Apple
+                    </span>
+                    <span className="text-xs font-normal text-neutral-400">
+                      5 days ago
+                    </span>
+                  </div>
+
+                  <h3 className="mt-1.5 text-lg sm:text-[21px] font-bold tracking-tight text-neutral-900">
+                    Graphic Designer
+                  </h3>
+                  <p className="mt-0.5 text-xs font-semibold text-indigo-600">
+                    AI Career Pathway Track
+                  </p>
+
+                  {/* Pill Tags */}
+                  <div className="mt-3.5 flex flex-wrap items-center gap-2">
+                    <span className="rounded-xl bg-[#f2f4f7] px-3.5 py-1.5 text-xs font-medium text-neutral-700">
+                      Full-Time
+                    </span>
+                    <span className="rounded-xl bg-[#f2f4f7] px-3.5 py-1.5 text-xs font-medium text-neutral-700">
+                      Flexible Schedule
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <Link
-                href="/roadmap"
-                className="mt-6 sm:mt-8 inline-flex h-10 sm:h-11 items-center justify-center rounded-xl bg-indigo-600 px-5 sm:px-6 text-xs font-semibold text-white transition hover:bg-indigo-700"
-              >
-                Generate My Career Roadmap →
-              </Link>
+              {/* Thin Divider & Bottom Row */}
+              <div className="mt-6">
+                <div className="border-t border-black/[0.06] pt-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-base sm:text-[17px] font-bold text-neutral-900">
+                        $85-120k
+                      </div>
+                      <div className="text-xs text-neutral-400 mt-0.5">
+                        Kerala, India
+                      </div>
+                    </div>
+
+                    <Link
+                      href="/roadmap"
+                      className="inline-flex items-center justify-center rounded-xl bg-[#141414] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-black active:scale-[0.98] shadow-xs"
+                    >
+                      Apply now
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -15,6 +15,8 @@ export type MentorDetail = {
   timezone: string;
   bio: string[];
   skills: string[];
+  mentorLevel?: string;
+  mentorScore?: number;
   experience: {
     role: string;
     company: string;
@@ -68,6 +70,8 @@ export const MENTOR_PROFILES_DATABASE: Record<string, MentorDetail> = {
     company: "Stripe",
     location: "Bengaluru, India",
     timezone: "IST (UTC+5:30)",
+    mentorLevel: "Senior Mentor",
+    mentorScore: 88,
     bio: [
       "Hey! I'm Aarav, a frontend engineer with 6+ years of experience crafting large-scale React and Next.js web applications. I’ve mentored 140+ student developers and early-career software engineers.",
       "My mentorship focuses on cutting through tutorial hell: understanding React reconciliation, mastering modern state architecture (Zustand, React Query), writing clean TypeScript, and preparing for competitive frontend interviews.",
@@ -204,6 +208,8 @@ export const MENTOR_PROFILES_DATABASE: Record<string, MentorDetail> = {
     company: "NeuralGraph Labs",
     location: "Hyderabad, India",
     timezone: "IST (UTC+5:30)",
+    mentorLevel: "Master Mentor",
+    mentorScore: 94,
     bio: [
       "PhD in Machine Learning with extensive experience in Computer Vision, Natural Language Processing, and LLM fine-tuning.",
       "I help students bridge the gap between academic math and production Python / PyTorch coding.",
@@ -283,6 +289,8 @@ export const MENTOR_PROFILES_DATABASE: Record<string, MentorDetail> = {
     company: "DesignScale",
     location: "Singapore",
     timezone: "SGT (UTC+8:00)",
+    mentorLevel: "Senior Mentor",
+    mentorScore: 85,
     bio: [
       "Product designer passionate about accessibility, Figma design systems, and helping young designers build portfolio case studies that convert.",
     ],
@@ -433,6 +441,12 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                     </svg>
                     VERIFIED MENTOR
                   </span>
+                  {mentor.mentorLevel && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-900 shadow-2xs">
+                      <span>👑</span>
+                      <span>AI-Certified: {mentor.mentorLevel} {mentor.mentorScore ? `(${mentor.mentorScore}%)` : ""}</span>
+                    </span>
+                  )}
                 </div>
 
                 <p className="mt-1.5 text-sm font-medium text-slate-700 sm:text-base">

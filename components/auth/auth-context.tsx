@@ -9,10 +9,21 @@ export type AuthUser = {
   email: string;
   role: Role;
   image?: string | null;
+  xp?: number;
+  completedActivities?: string[];
   profile?: {
     id: string;
     headline?: string | null;
     bio?: string | null;
+    education?: string | null;
+    skills?: string[];
+    interests?: string[];
+    careerGoal?: string | null;
+    mentorLevel?: string | null;
+    mentorScore?: number | null;
+    timezone?: string;
+    githubUrl?: string | null;
+    linkedinUrl?: string | null;
   } | null;
 };
 

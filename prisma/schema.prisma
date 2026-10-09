@@ -54,14 +54,16 @@ enum ReportTargetType {
 
 // 1. User
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  passwordHash  String?
-  image         String?
-  role          Role      @default(STUDENT)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String                @id @default(cuid())
+  name                String
+  email               String                @unique
+  passwordHash        String?
+  image               String?
+  role                Role                  @default(STUDENT)
+  xp                  Int                   @default(0)
+  completedActivities String[]              @default([])
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
   profile             Profile?
   posts               Post[]                @relation("MentorPosts")
@@ -86,6 +88,12 @@ model Profile {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   headline    String?
   bio         String?
+  education   String?
+  skills      String[] @default([])
+  interests   String[] @default([])
+  careerGoal  String?
+  mentorLevel String?
+  mentorScore Float?
   timezone    String   @default("UTC")
   githubUrl   String?
   linkedinUrl String?
