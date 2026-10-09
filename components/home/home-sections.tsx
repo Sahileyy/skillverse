@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
+import OrganicSphereLoader from "@/components/home/organic-sphere-loader";
 import { TangleFooter } from "@/components/ui/tangle-footer";
 
 // Sample Curated Data for the UI Sections
@@ -186,6 +187,14 @@ export default function HomeSections() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_30%,#000_70%,transparent_100%)] opacity-60"
         />
+
+        {/* Decorative Background Organic Kinetic Orbit (Optimized for mobile) */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute right-[2%] sm:right-[12%] lg:right-[18%] xl:right-[22%] top-1/2 -translate-y-1/2 z-0 opacity-15 sm:opacity-45 lg:opacity-55 scale-60 sm:scale-95 lg:scale-110 select-none"
+        >
+          <OrganicSphereLoader />
+        </div>
 
         {/* Centered Hero Content */}
         <div className="relative z-10 mx-auto max-w-5xl text-center">
