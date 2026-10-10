@@ -35,12 +35,34 @@ export async function POST(req: NextRequest) {
     }
 
     const isAlreadyCompleted = user.completedActivities.includes(ACTIVITY_KEY);
+
+    // Enforce Rule: Roadmap progress requires attending a peer meeting with a mentor
+    if (!isAlreadyCompleted) {
+      const attendedPeerMeeting = await prisma.booking.findFirst({
+        where: {
+          studentId: session.id,
+          status: { in: ["ACCEPTED", "COMPLETED"] },
+        },
+      });
+
+      if (!attendedPeerMeeting) {
+        return NextResponse.json(
+          {
+            success: false,
+            requiresPeerMeeting: true,
+            error: "Peer Meeting Required: Roadmap milestones unlock only after attending a 1-on-1 peer meeting with a mentor to verify your progress.",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     let xpToAdd = 0;
     let updatedActivities = [...user.completedActivities];
 
     if (!isAlreadyCompleted) {
-      // Award +5 XP for completing career roadmap milestone
-      xpToAdd = 5;
+      // Award +10 XP for peer-verified career roadmap milestone
+      xpToAdd = 10;
       updatedActivities.push(ACTIVITY_KEY);
     } else {
       // Uncheck milestone

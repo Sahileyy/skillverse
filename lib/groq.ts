@@ -54,6 +54,26 @@ export const groqCareerGuidanceSchema = z.object({
 
 export type GroqCareerGuidance = z.infer<typeof groqCareerGuidanceSchema>;
 
+// Zod Schema for AI Profile Skills Validation
+export const groqSkillValidationSchema = z.object({
+  targetRole: z.string(),
+  overallFitScore: z.number().min(0).max(100),
+  readinessLevel: z.string(),
+  analysisSummary: z.string(),
+  matchingStrengths: z.array(z.string()),
+  emergingSkills: z.array(z.string()),
+  criticalGaps: z.array(z.string()),
+  recommendedAssessments: z.array(
+    z.object({
+      skillName: z.string(),
+      reason: z.string(),
+      difficulty: z.enum(["SIMPLE", "MEDIUM", "HARD"]),
+    })
+  ).min(1).max(5),
+});
+
+export type GroqSkillValidation = z.infer<typeof groqSkillValidationSchema>;
+
 /**
  * Core helper to invoke Groq AI chat completion API
  */
@@ -161,21 +181,28 @@ export async function generateGroqAssessment({
 Candidate Profile Context:
 - Headline: ${candidateProfile.headline || "Not specified"}
 - Verified Profile Skills: ${candidateProfile.skills?.join(", ") || "General"}
-- Background: ${candidateProfile.education || candidateProfile.bio || "Computer Science / Software Engineering"}
+- Background: ${candidateProfile.education || candidateProfile.bio || "General Background"}
 ` : "";
 
-  const prompt = `You are a Principal Software Engineering Assessor for SkillVerse.
-Generate a high-quality 5-question technical assessment in "${skill}".
-User Role: ${isMentor ? "MENTOR (evaluate mentoring pedagogy, code review competence, and architectural auditing)" : "STUDENT (evaluate direct technical comprehension, coding patterns, and problem solving)"}.
+  const prompt = `You are a Principal Technical Assessor and Domain Lead for SkillVerse evaluating candidates for the role/position: "${role}".
+Target Skill to assess: "${skill}".
+User Track: ${isMentor ? "MENTOR (evaluate mentoring pedagogy, code/campaign review competence, and advanced auditing)" : "STUDENT / CANDIDATE (evaluate practical comprehension, problem-solving, and domain execution)"}.
 ${difficultyGuidelines}
 ${profileContext}
+
+DOMAIN & SCENARIO GUIDELINES:
+- Adapt the scenario questions to the specific profession and domain of "${role}":
+  * Software Engineering (Frontend, Backend, Full-Stack, Mobile, DevOps): Focus on real code patterns, async flow, framework internals, architecture trade-offs, and practical debugging.
+  * Digital Marketing (SEO, SEM, Social Media, Growth, Content): Focus on real metrics (CAC, LTV, ROAS, CTR, CPC), campaign optimization, search engine algorithms, A/B testing, and attribution models.
+  * Product, Design, or Data (UI/UX, Product Manager, Data Analyst): Focus on user heuristics, conversion funnels, SQL/analytics, experimentation frameworks, and prioritization.
+  * Any other role: Focus on realistic workplace scenarios, decision frameworks, and best practices.
 
 CRITICAL RULES:
 1. Every question must have exactly 4 distinct, plausible multiple-choice options.
 2. The options must be mutually exclusive and clear. Avoid vague or overlapping choices.
 3. The "correctAnswer" must be a 0-indexed integer (0 for option 1, 1 for option 2, 2 for option 3, 3 for option 4).
 4. Provide a thorough "explanation" analyzing the correct answer and why other options are incorrect.
-5. All questions must directly relate to the targeted skill "${skill}" and adhere to the ${normDifficulty} level.
+5. All questions must directly relate to the targeted skill "${skill}" in the context of "${role}" and adhere to the ${normDifficulty} level.
 
 OUTPUT FORMAT:
 Respond with ONLY valid JSON (no markdown formatting, no code fencing). The JSON must conform strictly to this format:
@@ -185,7 +212,7 @@ Respond with ONLY valid JSON (no markdown formatting, no code fencing). The JSON
   "questions": [
     {
       "id": 1,
-      "question": "Clear, scenario-based technical question",
+      "question": "Clear, scenario-based question",
       "options": [
         "A) Option 1",
         "B) Option 2",
@@ -340,4 +367,140 @@ Respond with ONLY valid JSON (no markdown formatting, no code fencing). The JSON
     console.warn("Failed to parse Groq Career Guidance JSON:", e);
     return null;
   }
+}
+
+/**
+ * Validate a student's profile skills against ANY target job position / role using Groq AI
+ */
+export async function validateProfileSkillsWithGroq({
+  targetRole,
+  skills = [],
+  headline,
+  bio,
+  education,
+}: {
+  targetRole: string;
+  skills: string[];
+  headline?: string | null;
+  bio?: string | null;
+  education?: string | null;
+}): Promise<GroqSkillValidation | null> {
+  const normRole = targetRole.trim();
+  if (!normRole) return null;
+
+  const prompt = `You are a Principal Talent Assessor and Industry Competency Auditor for SkillVerse.
+Evaluate the candidate's declared profile skills and background against real-world industry requirements for the target position: "${normRole}".
+Notice: The position can be ANY field (e.g. Software Developer, Digital Marketer, UI/UX Designer, Data Analyst, Product Manager, Cyber Security Specialist, SEO Strategist, Financial Analyst, etc.).
+
+CANDIDATE DETAILS:
+- Target Job Position / Role: "${normRole}"
+- Current Declared Skills: ${skills.length > 0 ? skills.join(", ") : "No skills explicitly listed"}
+- Headline: ${headline || "Student / Aspiring Professional"}
+- Bio / Summary: ${bio || "Not specified"}
+- Education / Background: ${education || "Not specified"}
+
+EVALUATION OBJECTIVES:
+1. "overallFitScore": Integer between 0 and 100 representing how well their current skill profile aligns with typical requirements for "${normRole}".
+2. "readinessLevel": "Foundational Learner" (0-45%), "Developing Candidate" (46-70%), "Competent Practitioner" (71-85%), or "Job-Ready Specialist" (86-100%).
+3. "analysisSummary": A crisp 2-3 sentence strategic summary analyzing their current fit, strengths, and primary gap for "${normRole}".
+4. "matchingStrengths": Array of skills from their profile that directly support "${normRole}".
+5. "emergingSkills": Array of skills that are tangentially relevant or partially developed.
+6. "criticalGaps": Array of 3-5 crucial industry skills required for "${normRole}" that are missing from their profile.
+7. "recommendedAssessments": Exactly 3 targeted assessments that would prove their competency for "${normRole}". Each assessment must have:
+   - "skillName": specific skill name (e.g., for Digital Marketer: "SEO & Keyword Intent", "Google Ads & PPC Strategy", "Web Analytics & Conversion Optimization"; for Developer: "React State Architecture", "Node.js REST APIs", "SQL Database Indexing")
+   - "reason": concise explanation of why this assessment proves readiness for "${normRole}"
+   - "difficulty": "SIMPLE", "MEDIUM", or "HARD"
+
+OUTPUT FORMAT:
+Respond with ONLY valid JSON (no markdown formatting, no code fencing). The JSON must conform strictly to this format:
+{
+  "targetRole": "${normRole}",
+  "overallFitScore": 72,
+  "readinessLevel": "Developing Candidate",
+  "analysisSummary": "Crisp strategic summary of fit for ${normRole}...",
+  "matchingStrengths": ["Skill 1", "Skill 2"],
+  "emergingSkills": ["Skill 3"],
+  "criticalGaps": ["Gap 1", "Gap 2", "Gap 3"],
+  "recommendedAssessments": [
+    {
+      "skillName": "Specific Skill",
+      "reason": "Why this proves competency...",
+      "difficulty": "MEDIUM"
+    }
+  ]
+}`;
+
+  const messages: GroqChatMessage[] = [
+    {
+      role: "system",
+      content: "You are an elite talent auditor and industry skill competency evaluator. Output strictly valid JSON conforming to the requested schema.",
+    },
+    {
+      role: "user",
+      content: prompt,
+    },
+  ];
+
+  const rawJson = await callGroqChat({ messages, temperature: 0.2 });
+  if (rawJson) {
+    try {
+      const parsed = JSON.parse(rawJson);
+      const validated = groqSkillValidationSchema.safeParse(parsed);
+      if (validated.success) {
+        return validated.data;
+      }
+      console.warn("Groq Skill Validation schema error:", validated.error);
+    } catch (e) {
+      console.warn("Failed to parse Groq Skill Validation JSON:", e);
+    }
+  }
+
+  // Graceful intelligent fallback if Groq API key is missing or rate limited
+  const isMarketing = normRole.toLowerCase().includes("market") || normRole.toLowerCase().includes("seo") || normRole.toLowerCase().includes("growth") || normRole.toLowerCase().includes("content");
+  const isDeveloper = normRole.toLowerCase().includes("dev") || normRole.toLowerCase().includes("software") || normRole.toLowerCase().includes("engineer") || normRole.toLowerCase().includes("code");
+  const isDesign = normRole.toLowerCase().includes("design") || normRole.toLowerCase().includes("ui") || normRole.toLowerCase().includes("ux");
+
+  let matchingStrengths: string[] = [];
+  let criticalGaps: string[] = [];
+  let recommendedAssessments: GroqSkillValidation["recommendedAssessments"] = [];
+
+  if (isMarketing) {
+    matchingStrengths = skills.filter((s) => /market|seo|social|content|copy|ads|analytics/i.test(s));
+    criticalGaps = ["Technical SEO & Core Web Vitals", "PPC & Meta Ads Strategy", "Conversion Rate Optimization (CRO)", "GA4 & Marketing Attribution"];
+    recommendedAssessments = [
+      { skillName: "SEO & Search Engine Algorithms", reason: "Demonstrates organic search acquisition mastery", difficulty: "MEDIUM" },
+      { skillName: "Paid Advertising & ROAS Optimization", reason: "Validates campaign budgeting and cost-per-click efficiency", difficulty: "MEDIUM" },
+      { skillName: "Web Analytics & Conversion Tracking", reason: "Shows data-driven experimentation skills", difficulty: "SIMPLE" },
+    ];
+  } else if (isDesign) {
+    matchingStrengths = skills.filter((s) => /design|figma|ui|ux|wireframe|user/i.test(s));
+    criticalGaps = ["Design Systems Architecture", "Usability Testing & Heuristics", "Interactive Prototyping", "Information Architecture"];
+    recommendedAssessments = [
+      { skillName: "UI/UX Design Systems & Tokens", reason: "Validates ability to build scalable design component libraries", difficulty: "MEDIUM" },
+      { skillName: "User Research & Usability Testing", reason: "Proves user-centric product validation capability", difficulty: "SIMPLE" },
+      { skillName: "Interaction Design & Micro-animations", reason: "Demonstrates high-fidelity product polish", difficulty: "HARD" },
+    ];
+  } else {
+    matchingStrengths = skills.filter((s) => /react|node|python|sql|java|typescript|next|docker|api|dev/i.test(s));
+    criticalGaps = ["System Architecture & Scalability", "Clean Code & PR Review Hygiene", "Automated Testing & CI/CD", "Database Indexing & Performance"];
+    recommendedAssessments = [
+      { skillName: skills[0] || "Full-Stack Software Architecture", reason: "Validates end-to-end implementation capability", difficulty: "MEDIUM" },
+      { skillName: "Data Structures & Algorithmic Efficiency", reason: "Tests core problem solving and memory constraints", difficulty: "MEDIUM" },
+      { skillName: "RESTful & GraphQL API Design", reason: "Proves backend contract integrity and security", difficulty: "HARD" },
+    ];
+  }
+
+  const fitScore = Math.min(95, Math.max(35, matchingStrengths.length * 20 + (skills.length > 0 ? 25 : 10)));
+  const readiness = fitScore >= 80 ? "Job-Ready Specialist" : fitScore >= 60 ? "Competent Practitioner" : "Developing Candidate";
+
+  return {
+    targetRole: normRole,
+    overallFitScore: fitScore,
+    readinessLevel: readiness,
+    analysisSummary: `Evaluated ${skills.length} declared skills against industry benchmarks for ${normRole}. Demonstrates relevant capability in ${matchingStrengths.slice(0, 2).join(", ") || "core fundamentals"}, with key advancement opportunities in ${criticalGaps.slice(0, 2).join(" and ")}.`,
+    matchingStrengths: matchingStrengths.length > 0 ? matchingStrengths : skills.slice(0, 2),
+    emergingSkills: skills.filter((s) => !matchingStrengths.includes(s)),
+    criticalGaps,
+    recommendedAssessments,
+  };
 }

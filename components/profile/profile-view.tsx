@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useAuth, AuthUser } from "@/components/auth/auth-context";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { ProfileUpdateInput } from "@/lib/validations/profile";
+import { getBadgeForXp, getNextBadge, BADGE_TIERS } from "@/lib/badges";
+import type { GroqSkillValidation } from "@/lib/groq";
 
 type ProfileEditFormProps = {
   user: AuthUser;
@@ -296,6 +298,41 @@ export default function ProfileView() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [xpCelebration, setXpCelebration] = useState<number | null>(null);
+
+  const [validatorRole, setValidatorRole] = useState("Full-Stack Software Engineer");
+  const [isValidatingSkills, setIsValidatingSkills] = useState(false);
+  const [validationResult, setValidationResult] = useState<GroqSkillValidation | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const handleValidateSkillsWithGroq = async (overrideRole?: string) => {
+    const roleToTest = overrideRole || validatorRole;
+    if (!roleToTest || roleToTest.trim().length < 2) return;
+    setIsValidatingSkills(true);
+    setValidationError(null);
+
+    try {
+      const res = await fetch("/api/ai/validate-skills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetRole: roleToTest.trim(),
+          skills: user?.profile?.skills || [],
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setValidationError(data.error || "Failed to validate skills with Groq AI");
+        return;
+      }
+
+      setValidationResult(data.validation);
+    } catch (err: any) {
+      setValidationError(err.message || "Network error validating skills");
+    } finally {
+      setIsValidatingSkills(false);
+    }
+  };
 
   const handleSaveProfile = async (formData: ProfileUpdateInput) => {
     setIsSaving(true);
@@ -593,6 +630,218 @@ export default function ProfileView() {
           </div>
         )}
 
+        {/* STUDENT AI GROQ PROFILE SKILLS VALIDATOR & ROLE RECOMMENDATION */}
+        {!isEditing && (
+          <div className="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/60 via-white to-purple-50/40 p-6 sm:p-7 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white text-xl shadow-xs font-bold">
+                  ⚡
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-indigo-100 border border-indigo-200 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+                      Groq LLaMA 3.3 AI
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-500">
+                      Universal Role & Skill Fit Engine
+                    </span>
+                  </div>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900">
+                    Validate Profile Skills for Any Job Position
+                  </h3>
+                  <p className="mt-0.5 text-xs text-slate-600 max-w-2xl leading-relaxed">
+                    Test your profile skills against any target role (Software Developer, Digital Marketer, UI/UX Designer, Data Analyst, etc.). Groq AI evaluates match score, reveals gaps, and suggests targeted assessments.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Role Presets & Custom Input */}
+            <div className="mt-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Select or Type Any Target Job Position:
+              </label>
+
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {[
+                  "Full-Stack Software Engineer",
+                  "Digital Marketer & Growth Strategist",
+                  "UI/UX Product Designer",
+                  "Data Analyst & BI Specialist",
+                  "Cyber Security Analyst",
+                  "Product Manager",
+                ].map((rolePreset) => (
+                  <button
+                    key={rolePreset}
+                    type="button"
+                    onClick={() => {
+                      setValidatorRole(rolePreset);
+                      handleValidateSkillsWithGroq(rolePreset);
+                    }}
+                    className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+                      validatorRole === rolePreset
+                        ? "border-indigo-600 bg-indigo-600 text-white shadow-xs"
+                        : "border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/50"
+                    }`}
+                  >
+                    {rolePreset}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Input Bar */}
+              <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  value={validatorRole}
+                  onChange={(e) => setValidatorRole(e.target.value)}
+                  placeholder="E.g., SEO Specialist, DevOps Engineer, Mobile iOS Developer..."
+                  className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  disabled={isValidatingSkills || !validatorRole.trim()}
+                  onClick={() => handleValidateSkillsWithGroq()}
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-indigo-600 px-5 text-xs font-bold text-white shadow-xs transition disabled:opacity-60"
+                >
+                  {isValidatingSkills ? (
+                    <>
+                      <div className="size-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <span>Groq AI Analyzing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Validate with Groq AI</span>
+                      <span>⚡</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {validationError && (
+                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
+                  {validationError}
+                </div>
+              )}
+            </div>
+
+            {/* Validation Results Display */}
+            {validationResult && (
+              <div className="mt-5 space-y-4 rounded-2xl border border-indigo-100 bg-white p-5 shadow-xs animate-fade-in">
+                {/* Header: Fit Score + Readiness */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      Target Role Evaluation
+                    </span>
+                    <h4 className="text-base font-bold text-slate-900 mt-0.5">
+                      {validationResult.targetRole}
+                    </h4>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <span className="text-2xl font-black text-indigo-600">
+                        {validationResult.overallFitScore}%
+                      </span>
+                      <p className="text-[10px] font-semibold text-slate-500">Skill Fit Match</p>
+                    </div>
+                    <span className="rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-bold text-indigo-800">
+                      {validationResult.readinessLevel}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Groq AI Summary */}
+                <div className="rounded-xl bg-slate-50 p-3.5 text-xs leading-relaxed text-slate-700 border border-slate-100">
+                  <span className="font-bold text-slate-900">AI Assessment: </span>
+                  {validationResult.analysisSummary}
+                </div>
+
+                {/* Strong Skills vs Missing Gaps */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3.5">
+                    <p className="text-[11px] font-bold text-emerald-900 uppercase tracking-wide">
+                      ✓ Strong Matched Skills
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {validationResult.matchingStrengths && validationResult.matchingStrengths.length > 0 ? (
+                        validationResult.matchingStrengths.map((s: string) => (
+                          <span
+                            key={s}
+                            className="rounded-lg bg-white border border-emerald-200 px-2 py-0.5 text-xs font-semibold text-emerald-800 shadow-2xs"
+                          >
+                            {s}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-500 italic">No strong matches found yet.</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3.5">
+                    <p className="text-[11px] font-bold text-amber-900 uppercase tracking-wide">
+                      ⚠️ Missing Skill Gaps to Bridge
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {validationResult.criticalGaps && validationResult.criticalGaps.length > 0 ? (
+                        validationResult.criticalGaps.map((s: string) => (
+                          <Link
+                            key={s}
+                            href={`/search?q=${encodeURIComponent(s)}`}
+                            className="group inline-flex items-center gap-1 rounded-lg bg-white border border-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900 shadow-2xs hover:border-amber-400"
+                            title={`Find peer mentor to learn ${s}`}
+                          >
+                            <span>{s}</span>
+                            <span className="text-[10px] text-amber-500 group-hover:text-amber-700">🤝</span>
+                          </Link>
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-500 italic">No critical gaps identified!</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommended Role-Aligned AI Assessments */}
+                <div className="border-t border-slate-100 pt-3">
+                  <p className="text-xs font-bold text-slate-900 mb-2">
+                    🎯 Recommended Real AI Assessments for this Role:
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {validationResult.recommendedAssessments.map((rec) => (
+                      <div
+                        key={rec.skillName}
+                        className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50/60 p-3"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900">{rec.skillName}</span>
+                            <span className="rounded bg-slate-200 px-1.5 py-0.2 text-[9px] font-bold text-slate-700">
+                              {rec.difficulty}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-[11px] text-slate-600 leading-snug">
+                            {rec.reason}
+                          </p>
+                        </div>
+                        <Link
+                          href={`/assessment?skill=${encodeURIComponent(rec.skillName)}&role=${encodeURIComponent(validationResult.targetRole)}`}
+                          className="mt-2.5 inline-flex h-8 items-center justify-center rounded-lg bg-indigo-600 px-3 text-[11px] font-bold text-white transition hover:bg-indigo-700 shadow-2xs"
+                        >
+                          Take AI Assessment (+10 XP) →
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 2. EDIT FORM OR VIEW PROFILE */}
         {isEditing ? (
           <ProfileEditForm
@@ -685,23 +934,95 @@ export default function ProfileView() {
                 </p>
               </div>
 
-              {/* XP Summary Box */}
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-900">Experience Points</h3>
-                  <span className="text-lg font-black text-amber-500">⚡ {user.xp || 0}</span>
-                </div>
-                <p className="mt-2 text-[11px] text-slate-500">
-                  Earn XP by completing skill assessments (+10), career roadmap milestones (+5), and keeping your profile updated (+20).
-                </p>
-                <div className="mt-4 space-y-2 border-t border-slate-100 pt-3 text-[11px]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-600">Profile Complete</span>
-                    <span className={user.completedActivities?.includes("profile_completed") ? "font-bold text-emerald-600" : "text-slate-400"}>
-                      {user.completedActivities?.includes("profile_completed") ? "✓ 20 XP" : "Pending (+20 XP)"}
-                    </span>
-                  </div>
-                </div>
+              {/* Student XP Badge & Paid Mentor Discount Wallet */}
+              <div className="rounded-3xl border border-amber-200/80 bg-gradient-to-br from-amber-50/60 via-white to-amber-50/30 p-6 shadow-xs">
+                {(() => {
+                  const studentXp = user.xp || 0;
+                  const currentBadge = getBadgeForXp(studentXp);
+                  const nextBadgeInfo = getNextBadge(studentXp);
+
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="rounded-full bg-amber-100 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800">
+                          XP Badge Wallet
+                        </span>
+                        <span className="text-base font-black text-amber-600">
+                          ⚡ {studentXp} XP
+                        </span>
+                      </div>
+
+                      {/* Current Tier Spotlight */}
+                      <div className="mt-3.5 flex items-center gap-3 rounded-2xl border border-amber-200 bg-white p-3.5 shadow-2xs">
+                        <span className="flex size-12 items-center justify-center rounded-xl bg-amber-100 text-2xl">
+                          {currentBadge.icon}
+                        </span>
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900">{currentBadge.name}</h4>
+                          <p className="text-[11px] font-semibold text-emerald-700">
+                            ✓ {currentBadge.discountPercent}% Off Paid Mentor Sessions (Max ₹{currentBadge.maxDiscountAmount})
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Progress to next tier */}
+                      {nextBadgeInfo.nextBadge && (
+                        <div className="mt-3.5">
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600">
+                            <span>Next: {nextBadgeInfo.nextBadge.name}</span>
+                            <span>{nextBadgeInfo.xpNeeded} XP needed</span>
+                          </div>
+                          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                            <div
+                              className="h-full bg-amber-500 rounded-full transition-all"
+                              style={{
+                                width: `${Math.min(
+                                  100,
+                                  Math.round((studentXp / nextBadgeInfo.nextBadge.minXp) * 100)
+                                )}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Badge Tiers Table */}
+                      <div className="mt-4 space-y-1.5 border-t border-slate-100 pt-3">
+                        <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                          Paid Mentor Discount Tiers:
+                        </p>
+                        {BADGE_TIERS.map((tier) => {
+                          const isUnlocked = studentXp >= tier.minXp;
+                          return (
+                            <div
+                              key={tier.id}
+                              className={`flex items-center justify-between rounded-xl px-2.5 py-1.5 text-xs transition ${
+                                isUnlocked
+                                  ? "bg-amber-100/60 font-semibold text-slate-900"
+                                  : "text-slate-400"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <span>{tier.icon}</span>
+                                <span>{tier.name}</span>
+                              </div>
+                              <span className={isUnlocked ? "text-emerald-700 font-bold" : "text-slate-400"}>
+                                {tier.discountPercent}% off (Cost {tier.redeemXpCost} XP)
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                        <span className="text-slate-500">Profile Completion</span>
+                        <span className={user.completedActivities?.includes("profile_completed") ? "font-bold text-emerald-600" : "text-slate-400"}>
+                          {user.completedActivities?.includes("profile_completed") ? "✓ 20 XP" : "Pending (+20 XP)"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Social Links */}

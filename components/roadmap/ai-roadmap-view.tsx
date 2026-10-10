@@ -307,6 +307,7 @@ export default function AIRoadmapView() {
   });
 
   const [xpAlert, setXpAlert] = useState<{ message: string; amount: number } | null>(null);
+  const [peerMeetingAlert, setPeerMeetingAlert] = useState<{ title: string; message: string; skill?: string } | null>(null);
   const [goalMessage, setGoalMessage] = useState<string | null>(null);
   const [isSavingGoal, setIsSavingGoal] = useState(false);
 
@@ -420,20 +421,25 @@ export default function AIRoadmapView() {
     );
   }, [pathwaySkills, userSkills]);
 
-  const toggleMilestone = async (nodeId: string, nodeTitle: string) => {
+  const toggleMilestone = async (nodeId: string, nodeTitle: string, milestoneSkills: string[] = []) => {
+    if (!user) {
+      openLoginModal();
+      return;
+    }
+
     const currentCompleted = Boolean(
       completedMilestones[nodeId] ||
       user?.completedActivities?.includes(`milestone:${selectedPathwayKey}:${nodeId}`)
     );
 
-    setCompletedMilestones((prev) => ({
-      ...prev,
-      [nodeId]: !currentCompleted,
-    }));
-
-    if (user) {
+    // If already completed, uncheck
+    if (currentCompleted) {
+      setCompletedMilestones((prev) => ({
+        ...prev,
+        [nodeId]: false,
+      }));
       try {
-        const res = await fetch("/api/roadmap/milestone-toggle", {
+        await fetch("/api/roadmap/milestone-toggle", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -441,19 +447,49 @@ export default function AIRoadmapView() {
             milestoneId: nodeId,
           }),
         });
-        const data = await res.json();
-        if (res.ok) {
-          if (data.xpAwarded && data.xpAwarded > 0) {
-            setXpAlert({
-              amount: data.xpAwarded,
-              message: `Completed "${nodeTitle}"!`,
-            });
-          }
-          await refreshUser();
-        }
+        await refreshUser();
       } catch (err) {
-        console.error("Failed to toggle milestone:", err);
+        console.error("Failed to uncheck milestone:", err);
       }
+      return;
+    }
+
+    // Attempt to verify and unlock
+    try {
+      const res = await fetch("/api/roadmap/milestone-toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pathwayId: selectedPathwayKey,
+          milestoneId: nodeId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPeerMeetingAlert({
+          title: nodeTitle,
+          message: data.error || "Peer Meeting Required: Career roadmap milestones unlock only after attending a 1-on-1 peer session with a mentor to verify your understanding.",
+          skill: milestoneSkills[0] || nodeTitle,
+        });
+        return;
+      }
+
+      setCompletedMilestones((prev) => ({
+        ...prev,
+        [nodeId]: true,
+      }));
+
+      if (data.xpAwarded && data.xpAwarded > 0) {
+        setXpAlert({
+          amount: data.xpAwarded,
+          message: `Verified & Completed "${nodeTitle}" via Peer Mentor Session!`,
+        });
+      }
+      await refreshUser();
+    } catch (err) {
+      console.error("Failed to toggle milestone:", err);
     }
   };
 
@@ -1006,7 +1042,7 @@ export default function AIRoadmapView() {
                     <button
                       type="button"
                       onClick={async () => {
-                        await toggleMilestone(currentWaypoint.id, currentWaypoint.title);
+                        await toggleMilestone(currentWaypoint.id, currentWaypoint.title, currentWaypoint.skills);
                         if (safeWaypointIndex < activePathway.milestones.length - 1) {
                           const nextIdx = safeWaypointIndex + 1;
                           scrollToMilestone(activePathway.milestones[nextIdx].id, nextIdx);
@@ -1018,7 +1054,7 @@ export default function AIRoadmapView() {
                           : "bg-indigo-600 text-white hover:bg-indigo-700"
                       }`}
                     >
-                      {isCurrentWaypointDone ? "✓ Waypoint Cleared" : "Mark Cleared & Proceed → (+5 XP)"}
+                      {isCurrentWaypointDone ? "✓ Peer Verified" : "Verify with Peer Meeting → (+10 XP)"}
                     </button>
 
                     <button
@@ -1070,9 +1106,9 @@ export default function AIRoadmapView() {
                     type="button"
                     onClick={() => {
                       setActiveWaypointIndex(index);
-                      toggleMilestone(node.id, node.title);
+                      toggleMilestone(node.id, node.title, node.skills);
                     }}
-                    title={isNodeDone ? "Mark as in-progress" : "Mark as completed (+5 XP)"}
+                    title={isNodeDone ? "Verified & Completed" : "Verify with Peer Meeting to complete (+10 XP)"}
                     className={`absolute -left-[35px] top-1.5 flex size-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
                       isNodeDone
                         ? "bg-emerald-600 text-white shadow-xs"
@@ -1154,14 +1190,14 @@ export default function AIRoadmapView() {
                       {/* Complete Checkbox Toggle */}
                       <button
                         type="button"
-                        onClick={() => toggleMilestone(node.id, node.title)}
+                        onClick={() => toggleMilestone(node.id, node.title, node.skills)}
                         className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                           isNodeDone
                             ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                            : "border-slate-200 bg-slate-900 text-white hover:bg-slate-800"
+                            : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
                         }`}
                       >
-                        <span>{isNodeDone ? "✓ Completed" : "Mark Done (+5 XP)"}</span>
+                        <span>{isNodeDone ? "✓ Verified & Done" : "Verify with Peer Meeting →"}</span>
                       </button>
                     </div>
 
@@ -1242,6 +1278,69 @@ export default function AIRoadmapView() {
             </Link>
           </div>
         </div>
+
+        {/* Peer Meeting Required Verification Modal */}
+        {peerMeetingAlert && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4 animate-fade-in">
+            <div className="relative w-full max-w-lg rounded-3xl border border-indigo-100 bg-white p-6 shadow-2xl sm:p-8">
+              <button
+                type="button"
+                onClick={() => setPeerMeetingAlert(null)}
+                className="absolute right-5 top-5 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              >
+                ✕
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-700">
+                  <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">
+                    Peer Verification Required
+                  </span>
+                  <h3 className="text-lg font-bold text-slate-900 mt-0.5">
+                    Attend Peer Meeting to Progress
+                  </h3>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Milestone</p>
+                <p className="text-sm font-bold text-slate-900 mt-0.5">{peerMeetingAlert.title}</p>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                  {peerMeetingAlert.message}
+                </p>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3.5 text-xs text-indigo-900 flex items-start gap-2.5">
+                <span className="text-base">💡</span>
+                <p className="leading-relaxed">
+                  Career roadmap progress unlocks <strong>+10 XP</strong> and advances your career level only when verified through an attended 1-on-1 peer session with an approved mentor.
+                </p>
+              </div>
+
+              <div className="mt-6 flex flex-col sm:flex-row items-center gap-2.5">
+                <Link
+                  href={`/search?q=${encodeURIComponent(peerMeetingAlert.skill || "")}`}
+                  onClick={() => setPeerMeetingAlert(null)}
+                  className="w-full sm:flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
+                >
+                  Book Peer Meeting with Mentor →
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setPeerMeetingAlert(null)}
+                  className="w-full sm:w-auto inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

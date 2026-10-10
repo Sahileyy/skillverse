@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
+import { calculateXpDiscount, getBadgeForXp } from "@/lib/badges";
 
 export type MentorDetail = {
   id: string;
@@ -375,17 +376,37 @@ function getMentorData(mentorId: string): MentorDetail {
 export default function MentorProfileView({ mentorId }: { mentorId: string }) {
   const mentor = getMentorData(mentorId);
   const openLoginModal = useLoginModal();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const [selectedSession, setSelectedSession] = useState(mentor.sessions[0]?.id || "");
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [redeemXp, setRedeemXp] = useState(false);
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [confirmedBookingData, setConfirmedBookingData] = useState<{
+    id: string;
+    meetingUrl?: string | null;
+    discountApplied?: {
+      badgeName: string;
+      discountAmount: number;
+      finalPrice: number;
+      xpRedeemed: number;
+    } | null;
+  } | null>(null);
 
   const activeSessionObj = mentor.sessions.find((s) => s.id === selectedSession) || mentor.sessions[0];
   const currentDateSlots = mentor.availableSlots[selectedDateIndex] || mentor.availableSlots[0];
 
-  const handleBookingSubmit = () => {
+  const isPaid = activeSessionObj.pricingType === "PAID";
+  const numericPrice = isPaid ? (parseFloat(activeSessionObj.priceAmount?.replace(/[^0-9.]/g, "") || "0") || 0) : 0;
+  const studentXp = user?.xp || 0;
+  const currentBadge = getBadgeForXp(studentXp);
+  const xpDiscount = isPaid && numericPrice > 0 ? calculateXpDiscount(studentXp, numericPrice) : null;
+  const effectivePrice = isPaid && redeemXp && xpDiscount?.canApply ? `₹${xpDiscount.finalPrice}` : (isPaid ? activeSessionObj.priceAmount : "Free ($0)");
+
+  const handleBookingSubmit = async () => {
     if (!user) {
       openLoginModal();
       return;
@@ -394,7 +415,43 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
       alert("Please select a time slot first.");
       return;
     }
-    setBookingConfirmed(true);
+
+    setIsSubmittingBooking(true);
+    setBookingError(null);
+
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mentorId,
+          sessionTitle: activeSessionObj.title,
+          pricingType: activeSessionObj.pricingType,
+          rawPrice: isPaid ? numericPrice : undefined,
+          redeemXp: isPaid && redeemXp,
+          slotTime: selectedSlot,
+          scheduledAt: new Date(Date.now() + (selectedDateIndex + 1) * 86400000).toISOString(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setBookingError(data.error || "Failed to confirm booking.");
+        return;
+      }
+
+      setConfirmedBookingData({
+        id: data.booking?.id || "bkg-" + Date.now(),
+        meetingUrl: data.booking?.meetingUrl,
+        discountApplied: data.discountApplied,
+      });
+      setBookingConfirmed(true);
+      await refreshUser();
+    } catch (err: any) {
+      setBookingError(err.message || "Failed to book mentorship session.");
+    } finally {
+      setIsSubmittingBooking(false);
+    }
   };
 
   return (
@@ -736,21 +793,57 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
 
               {/* Booking Confirmation / Summary Box */}
               {bookingConfirmed ? (
-                <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-                  <div className="mx-auto flex size-8 items-center justify-center rounded-full bg-emerald-600 text-white font-bold text-sm">
+                <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center animate-fade-in">
+                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-emerald-600 text-white font-bold text-base shadow-xs">
                     ✓
                   </div>
-                  <h3 className="mt-2 text-xs font-bold text-emerald-900">Session Request Sent!</h3>
-                  <p className="mt-1 text-[11px] text-emerald-700">
-                    {mentor.name} will confirm your slot ({selectedSlot} on {currentDateSlots?.day}). Meeting link will be shared via chat.
+                  <h3 className="mt-2 text-sm font-bold text-emerald-950">Mentorship Session Confirmed!</h3>
+                  <p className="mt-1 text-xs text-emerald-800">
+                    Your 1-on-1 peer session with <strong>{mentor.name}</strong> is scheduled for <strong>{selectedSlot}</strong> ({currentDateSlots?.day}).
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setBookingConfirmed(false)}
-                    className="mt-3 text-[11px] font-bold text-emerald-800 underline"
-                  >
-                    Book another slot
-                  </button>
+
+                  {/* Google Meet Link */}
+                  {confirmedBookingData?.meetingUrl && (
+                    <div className="mt-3.5 rounded-xl border border-emerald-300 bg-white p-3 text-left shadow-2xs">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-900">
+                        <span>📹 Google Meet Link Ready:</span>
+                      </div>
+                      <a
+                        href={confirmedBookingData.meetingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 block truncate text-xs font-semibold text-blue-600 underline hover:text-blue-800"
+                      >
+                        {confirmedBookingData.meetingUrl}
+                      </a>
+                    </div>
+                  )}
+
+                  {/* XP Discount Applied Callout */}
+                  {confirmedBookingData?.discountApplied && (
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900">
+                      ⚡ <strong>{confirmedBookingData.discountApplied.badgeName} Perk:</strong> Redeemed {confirmedBookingData.discountApplied.xpRedeemed} XP for a ₹{confirmedBookingData.discountApplied.discountAmount} discount! (Paid: ₹{confirmedBookingData.discountApplied.finalPrice})
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex flex-col gap-2">
+                    <Link
+                      href="/roadmap"
+                      className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white transition hover:bg-emerald-700"
+                    >
+                      View Career Roadmap Progress →
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingConfirmed(false);
+                        setConfirmedBookingData(null);
+                      }}
+                      className="text-xs font-semibold text-emerald-800 underline hover:text-emerald-950"
+                    >
+                      Book another slot
+                    </button>
+                  </div>
                 </div>
               ) : user && (user.id === mentorId || user.name === mentor.name) ? (
                 <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 text-center">
@@ -788,25 +881,87 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                     </div>
                   )}
 
+                  {/* Student XP Badge Discount Card (For Paid Sessions) */}
+                  {isPaid && user && (
+                    <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{currentBadge.icon}</span>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold text-slate-900">{currentBadge.name}</span>
+                              <span className="rounded bg-amber-200 px-1.5 py-0.2 text-[10px] font-bold text-amber-900">
+                                {studentXp} XP
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-600">
+                              {xpDiscount?.canApply
+                                ? `Unlock ${xpDiscount.badge.discountPercent}% off (Save ₹${xpDiscount.discountAmount})`
+                                : `Earn ${xpDiscount?.badge.redeemXpCost || 50} XP to unlock discount`}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {xpDiscount?.canApply && (
+                        <label className="mt-2.5 flex items-center gap-2 cursor-pointer pt-2 border-t border-amber-200">
+                          <input
+                            type="checkbox"
+                            checked={redeemXp}
+                            onChange={(e) => setRedeemXp(e.target.checked)}
+                            className="size-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                          />
+                          <span className="text-xs font-bold text-amber-950">
+                            Apply {xpDiscount.badge.discountPercent}% XP Badge Discount (-₹{xpDiscount.discountAmount})
+                          </span>
+                        </label>
+                      )}
+                    </div>
+                  )}
+
                   {/* Price Summary */}
                   <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-xs">
                     <span className="font-semibold text-slate-600">Total Price:</span>
-                    <span className="text-sm font-bold text-slate-900">
-                      {activeSessionObj.pricingType === "FREE" ? "Free ($0)" : activeSessionObj.priceAmount}
-                    </span>
+                    <div className="text-right">
+                      {isPaid && redeemXp && xpDiscount?.canApply ? (
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xs text-slate-400 line-through">
+                            {activeSessionObj.priceAmount}
+                          </span>
+                          <span className="text-sm font-bold text-emerald-600">
+                            {effectivePrice}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-bold text-slate-900">
+                          {activeSessionObj.pricingType === "FREE" ? "Free ($0)" : activeSessionObj.priceAmount}
+                        </span>
+                      )}
+                    </div>
                   </div>
+
+                  {bookingError && (
+                    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-2.5 text-xs font-semibold text-red-700">
+                      {bookingError}
+                    </div>
+                  )}
 
                   <button
                     type="button"
+                    disabled={isSubmittingBooking}
                     onClick={handleBookingSubmit}
-                    className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white shadow-sm transition hover:bg-blue-600"
+                    className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white shadow-sm transition hover:bg-blue-600 disabled:opacity-60"
                   >
-                    {selectedSlot ? `Confirm Request for ${selectedSlot} →` : "Select a Time Slot to Continue"}
+                    {isSubmittingBooking
+                      ? "Securing Session..."
+                      : selectedSlot
+                      ? `Confirm Request for ${selectedSlot} (${effectivePrice}) →`
+                      : "Select a Time Slot to Continue"}
                   </button>
 
                   <div className="mt-4 space-y-1 text-center text-[10px] text-slate-400">
-                    <p>Instant Google Meet link upon mentor confirmation</p>
-                    <p>Secure booking • Free cancellation anytime</p>
+                    <p>Instant Google Meet link generated upon booking</p>
+                    <p>Milestone verification automatically unlocks in Roadmap</p>
                   </div>
                 </div>
               )}

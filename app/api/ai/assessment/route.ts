@@ -7,6 +7,7 @@ import { generateGroqAssessment, GroqQuizResponse } from "@/lib/groq";
 const requestSchema = z.object({
   skill: z.string().min(2, "Skill name must be at least 2 characters").max(60),
   difficulty: z.enum(["SIMPLE", "MEDIUM", "HARD"]).default("MEDIUM"),
+  role: z.string().max(80).optional(),
 });
 
 // =========================================================================
@@ -632,12 +633,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { skill, difficulty } = parsed.data;
+    const { skill, difficulty, role: customRole } = parsed.data;
+    const effectiveRole = customRole?.trim() || role;
 
-    // Attempt generation with Groq AI using full profile context
+    // Attempt generation with Groq AI using full profile context & specific job role
     const groqQuiz = await generateGroqAssessment({
       skill,
-      role,
+      role: effectiveRole,
       difficulty,
       candidateProfile,
     });

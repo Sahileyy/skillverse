@@ -342,6 +342,7 @@ export default function AIAssessmentView() {
 
   const initialQuizParam = searchParams.get("quiz");
   const initialSkillParam = searchParams.get("skill");
+  const initialRoleParam = searchParams.get("role");
   const initialTierParam = searchParams.get("difficulty") || searchParams.get("level");
 
   const defaultQuiz = initialQuizParam && QUIZ_BANK[initialQuizParam]
@@ -361,6 +362,11 @@ export default function AIAssessmentView() {
   const [navigatingUrl, setNavigatingUrl] = useState<string | null>(null);
   const [navigatingCareerTitle, setNavigatingCareerTitle] = useState<string>("Full-Stack Software Engineer");
   const [evaluatedScore, setEvaluatedScore] = useState<number>(0);
+
+  // Target Role for AI Assessment (Supports ANY Job Position, e.g. Developer, Digital Marketer, etc.)
+  const [targetRole, setTargetRole] = useState<string>(
+    initialRoleParam || user?.profile?.careerGoal || (isMentor ? "Technical Mentor" : "Full-Stack Software Engineer")
+  );
 
   // 3 Dynamic Difficulty Tiers: Simple, Medium, Hard
   const [difficultyTier, setDifficultyTier] = useState<"SIMPLE" | "MEDIUM" | "HARD">(() => {
@@ -436,9 +442,10 @@ export default function AIAssessmentView() {
   }, [user]);
 
   // Handle Dynamic Profile-Based Quiz Generation
-  const handleGenerateProfileQuiz = useCallback(async (targetSkill: string) => {
+  const handleGenerateProfileQuiz = useCallback(async (targetSkill: string, overrideRole?: string) => {
     const skillToEvaluate = targetSkill.trim();
     if (!skillToEvaluate) return;
+    const effectiveRole = (overrideRole || targetRole).trim();
 
     try {
       setIsGeneratingQuiz(true);
@@ -450,6 +457,7 @@ export default function AIAssessmentView() {
         body: JSON.stringify({
           skill: skillToEvaluate,
           difficulty: difficultyTier,
+          role: effectiveRole,
         }),
       });
 
@@ -472,13 +480,13 @@ export default function AIAssessmentView() {
       const formattedQuiz: SkillQuiz = {
         id: key,
         skillName: data.quiz.skillName,
-        category: isMentor ? "Mentor Pedagogy" : "Student Verification",
+        category: effectiveRole || (isMentor ? "Mentor Pedagogy" : "Role-Aligned Evaluation"),
         icon: isMentor ? "Mentor" : "Skill",
         difficulty: diffLabel,
         estimatedTime: "5 mins",
         description: isMentor
           ? `Mentor Competency & Accreditation Assessment in ${data.quiz.skillName} (${diffLabel} Level).`
-          : `Profile-grounded technical evaluation in ${data.quiz.skillName} (${diffLabel} Level).`,
+          : `AI Role-Aligned Assessment for "${effectiveRole}" in ${data.quiz.skillName} (${diffLabel} Level).`,
         questions: (data.quiz.questions as ApiQuizQuestion[]).map((q) => ({
           id: q.id,
           question: q.question,
@@ -503,7 +511,7 @@ export default function AIAssessmentView() {
     } finally {
       setIsGeneratingQuiz(false);
     }
-  }, [difficultyTier, isMentor]);
+  }, [difficultyTier, isMentor, targetRole]);
 
   const handleStartPresetQuiz = (quizKey: string) => {
     setSelectedQuizKey(quizKey);
@@ -1058,6 +1066,48 @@ export default function AIAssessmentView() {
                     )}
                   </div>
 
+                  {/* Target Role Selector (Allows ANY Job Position: Developer, Digital Marketer, UI/UX, etc.) */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Target Career Role / Job Position:
+                    </label>
+                    <p className="text-[11px] text-slate-500 mb-2">
+                      Groq AI aligns scenarios, real-world constraints, and questions to this specific role.
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {[
+                        "Full-Stack Software Engineer",
+                        "Digital Marketer & Growth Strategist",
+                        "UI/UX Product Designer",
+                        "Data Analyst & BI Specialist",
+                        "Cyber Security Analyst",
+                        "Product Manager",
+                      ].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setTargetRole(preset)}
+                          className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition border ${
+                            targetRole === preset
+                              ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+                              : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                          }`}
+                        >
+                          {preset}
+                        </button>
+                      ))}
+                    </div>
+
+                    <input
+                      type="text"
+                      value={targetRole}
+                      onChange={(e) => setTargetRole(e.target.value)}
+                      placeholder="Or type ANY custom role: e.g. Content Marketer, DevOps Engineer, Cloud Architect..."
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-indigo-600 focus:outline-none"
+                    />
+                  </div>
+
                   {/* Custom Topic Input */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700">
@@ -1070,7 +1120,7 @@ export default function AIAssessmentView() {
                         setCustomSkillInput(e.target.value);
                         setChosenSkill(e.target.value);
                       }}
-                      placeholder="e.g. TypeScript, React Hooks, PostgreSQL, Docker, PyTorch..."
+                      placeholder="e.g. TypeScript, React Hooks, PostgreSQL, Docker, PyTorch, SEO Strategy..."
                       className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:border-indigo-600 focus:outline-none"
                     />
                   </div>
@@ -1163,7 +1213,7 @@ export default function AIAssessmentView() {
                         </>
                       ) : (
                         <>
-                          <span>⚡ Generate & Take Quiz ({chosenSkill})</span>
+                          <span>⚡ Generate & Take AI Quiz ({chosenSkill} • {targetRole})</span>
                           <span>→</span>
                         </>
                       )}
