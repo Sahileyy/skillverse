@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
+import { useAuth } from "@/components/auth/auth-context";
 import OrganicSphereLoader from "@/components/home/organic-sphere-loader";
 import { TangleFooter } from "@/components/ui/tangle-footer";
 
@@ -153,6 +154,7 @@ const RECENT_REVIEWS = [
 export default function HomeSections() {
   const router = useRouter();
   const openLoginModal = useLoginModal();
+  const { user } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -240,9 +242,22 @@ export default function HomeSections() {
                 type="submit"
                 className="inline-flex h-9 sm:h-11 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-slate-900 px-3.5 sm:px-6 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-slate-800"
               >
-                Find Mentor
+                {user?.role === "MENTOR" ? "Search Catalog" : "Find Mentor"}
               </button>
             </form>
+
+            {/* Mentor Studio shortcut for logged in Mentors */}
+            {user?.role === "MENTOR" && (
+              <div className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2 text-xs font-semibold text-blue-800 shadow-2xs">
+                <span>👋 Welcome, Mentor {user.name.split(" ")[0]}!</span>
+                <Link
+                  href="/mentor/dashboard"
+                  className="rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-bold text-white transition hover:bg-blue-700"
+                >
+                  Open Mentor Studio →
+                </Link>
+              </div>
+            )}
 
             {/* Trending Skill Pills */}
             <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
@@ -495,8 +510,14 @@ export default function HomeSections() {
 
           <button
             type="button"
-            onClick={openLoginModal}
-            className="inline-flex h-9 sm:h-10 items-center justify-center rounded-lg sm:rounded-xl bg-slate-900 px-3.5 sm:px-4 text-xs font-semibold text-white transition hover:bg-slate-800"
+            onClick={() => {
+              if (user) {
+                router.push("/community");
+              } else {
+                openLoginModal();
+              }
+            }}
+            className="inline-flex h-9 sm:h-10 items-center justify-center rounded-lg sm:rounded-xl bg-slate-900 px-3.5 sm:px-4 text-xs font-semibold text-white transition hover:bg-slate-800 cursor-pointer"
           >
             + Post Project Idea
           </button>
@@ -558,9 +579,13 @@ export default function HomeSections() {
                 <button
                   type="button"
                   onClick={() => {
-                    openLoginModal();
+                    if (user) {
+                      router.push("/community");
+                    } else {
+                      openLoginModal();
+                    }
                   }}
-                  className="w-full rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 py-2 sm:py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-900 hover:text-white"
+                  className="w-full rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 py-2 sm:py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-900 hover:text-white cursor-pointer"
                 >
                   Request to Join Team
                 </button>
@@ -847,20 +872,69 @@ export default function HomeSections() {
           </p>
 
           <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <button
-              type="button"
-              onClick={openLoginModal}
-              className="w-full sm:w-auto h-11 sm:h-12 rounded-xl bg-white px-6 sm:px-7 text-xs sm:text-sm font-bold text-slate-950 transition hover:bg-slate-100 active:scale-95"
-            >
-              Get Started for Free →
-            </button>
-            <button
-              type="button"
-              onClick={openLoginModal}
-              className="w-full sm:w-auto h-11 sm:h-12 rounded-xl border border-slate-700 px-6 sm:px-7 text-xs sm:text-sm font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white active:scale-95"
-            >
-              Become a Mentor
-            </button>
+            {user?.role === "MENTOR" ? (
+              <>
+                <Link
+                  href="/mentor/dashboard"
+                  className="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-12 rounded-xl bg-blue-600 px-6 sm:px-7 text-xs sm:text-sm font-bold text-white transition hover:bg-blue-500 active:scale-95 shadow-md shadow-blue-950/40"
+                >
+                  Go to Mentor Studio →
+                </Link>
+                <Link
+                  href="/community"
+                  className="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-12 rounded-xl border border-slate-700 px-6 sm:px-7 text-xs sm:text-sm font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white active:scale-95"
+                >
+                  Explore Community Projects
+                </Link>
+              </>
+            ) : user?.role === "ADMIN" ? (
+              <>
+                <Link
+                  href="/mentor/dashboard"
+                  className="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-12 rounded-xl bg-purple-600 px-6 sm:px-7 text-xs sm:text-sm font-bold text-white transition hover:bg-purple-500 active:scale-95"
+                >
+                  Admin Studio →
+                </Link>
+                <Link
+                  href="/community"
+                  className="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-12 rounded-xl border border-slate-700 px-6 sm:px-7 text-xs sm:text-sm font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white active:scale-95"
+                >
+                  Community Projects
+                </Link>
+              </>
+            ) : user ? (
+              <>
+                <Link
+                  href="/search"
+                  className="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-12 rounded-xl bg-white px-6 sm:px-7 text-xs sm:text-sm font-bold text-slate-950 transition hover:bg-slate-100 active:scale-95"
+                >
+                  Find a Mentor →
+                </Link>
+                <Link
+                  href="/mentor/dashboard"
+                  className="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-12 rounded-xl border border-slate-700 px-6 sm:px-7 text-xs sm:text-sm font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white active:scale-95"
+                >
+                  Become a Mentor
+                </Link>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={openLoginModal}
+                  className="w-full sm:w-auto h-11 sm:h-12 rounded-xl bg-white px-6 sm:px-7 text-xs sm:text-sm font-bold text-slate-950 transition hover:bg-slate-100 active:scale-95 cursor-pointer"
+                >
+                  Get Started for Free →
+                </button>
+                <button
+                  type="button"
+                  onClick={openLoginModal}
+                  className="w-full sm:w-auto h-11 sm:h-12 rounded-xl border border-slate-700 px-6 sm:px-7 text-xs sm:text-sm font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white active:scale-95 cursor-pointer"
+                >
+                  Become a Mentor
+                </button>
+              </>
+            )}
           </div>
         </div>
       </section>

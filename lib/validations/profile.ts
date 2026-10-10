@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const profileUpdateSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
+  role: z.enum(["STUDENT", "MENTOR"]).optional(),
   education: z.string().max(200).optional().nullable(),
   bio: z.string().max(1000).optional().nullable(),
   headline: z.string().max(200).optional().nullable(),

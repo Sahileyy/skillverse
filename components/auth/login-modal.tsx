@@ -8,7 +8,7 @@ type LoginModalProps = {
 };
 
 export default function LoginModal({ onClose }: LoginModalProps) {
-  const { login, register } = useAuth();
+  const { login, register, user, logout } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   
@@ -79,10 +79,12 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         <div className="flex items-center justify-between pb-3">
           <div>
             <h2 className="text-xl font-bold text-[#111111]" id="auth-title">
-              {mode === "signin" ? "Welcome Back" : "Join SkillVerse"}
+              {user ? "Account Session" : mode === "signin" ? "Welcome Back" : "Join SkillVerse"}
             </h2>
             <p className="text-xs text-gray-500">
-              {mode === "signin"
+              {user
+                ? "You are currently signed in to SkillVerse"
+                : mode === "signin"
                 ? "Enter your credentials to access your account"
                 : "Choose your role and start sharing or learning skills"}
             </p>
@@ -90,7 +92,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           <button
             onClick={onClose}
             type="button"
-            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
             aria-label="Close"
           >
             <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,13 +101,46 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           </button>
         </div>
 
-        {errorMessage && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600">
-            {errorMessage}
+        {user ? (
+          <div className="py-3 text-center">
+            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-900 text-white font-bold text-lg shadow-sm">
+              {user.name.slice(0, 2).toUpperCase()}
+            </div>
+            <h3 className="mt-3 text-base font-bold text-slate-900">
+              Signed in as {user.name}
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              {user.email} • <span className="font-semibold text-slate-700">{user.role}</span>
+            </p>
+            <div className="mt-6 flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full rounded-xl bg-slate-900 py-3 text-xs font-bold text-white transition hover:bg-slate-800 cursor-pointer"
+              >
+                Continue to SkillVerse
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await logout();
+                  setMode("signin");
+                }}
+                className="w-full rounded-xl border border-rose-200 bg-rose-50/70 py-2.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100 cursor-pointer"
+              >
+                Sign Out / Switch Account
+              </button>
+            </div>
           </div>
-        )}
+        ) : (
+          <>
+            {errorMessage && (
+              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600">
+                {errorMessage}
+              </div>
+            )}
 
-        <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
+            <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
           {mode === "signup" && (
             <>
               {/* Role Selection */}
@@ -242,6 +277,8 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             </button>
           </p>
         </form>
+        </>
+        )}
       </section>
     </div>
   );

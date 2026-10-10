@@ -381,6 +381,31 @@ export default function SearchPageView() {
           </div>
         </div>
 
+        {/* Mentor Mode Alert Banner */}
+        {user?.role === "MENTOR" && (
+          <div className="mt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-blue-200/90 bg-blue-50/80 p-4 text-blue-950 shadow-xs">
+            <div className="flex items-center gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-sm shadow-xs">
+                ★
+              </span>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-blue-900">
+                  You are browsing the Student-Facing Skill Catalog as a Mentor
+                </p>
+                <p className="text-[11px] sm:text-xs text-blue-700">
+                  Students discover your offerings here. To publish sessions, track bookings, or manage requests, visit your Mentor Studio.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/mentor/dashboard"
+              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition"
+            >
+              Open Mentor Studio →
+            </Link>
+          </div>
+        )}
+
         {/* SEARCH & CONTROLS BAR (MentorCruise / GrowthMentor inspired) */}
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
           {/* Main Input Row */}
@@ -618,12 +643,28 @@ export default function SearchPageView() {
                       >
                         View Profile
                       </Link>
-                      <Link
-                        href={`/mentor/${post.mentorId}#booking-widget`}
-                        className="flex h-10 items-center justify-center rounded-xl bg-slate-900 text-xs font-semibold text-white transition hover:bg-blue-600"
-                      >
-                        Book Session →
-                      </Link>
+                      {user && (post.mentorId === user.id || post.mentorName === user.name) ? (
+                        <Link
+                          href="/mentor/dashboard"
+                          className="flex h-10 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white transition hover:bg-blue-700"
+                        >
+                          Manage Ad ⚙
+                        </Link>
+                      ) : user?.role === "MENTOR" ? (
+                        <Link
+                          href={`/messages`}
+                          className="flex h-10 items-center justify-center rounded-xl bg-indigo-600 text-xs font-semibold text-white transition hover:bg-indigo-700"
+                        >
+                          Peer Message 💬
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/mentor/${post.mentorId}#booking-widget`}
+                          className="flex h-10 items-center justify-center rounded-xl bg-slate-900 text-xs font-semibold text-white transition hover:bg-blue-600"
+                        >
+                          Book Session →
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>

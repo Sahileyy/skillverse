@@ -173,8 +173,8 @@ export default function MentorDashboardView() {
 
       if (data.xpAwarded && data.xpAwarded > 0) {
         setXpCelebration(data.xpAwarded);
-        await refreshUser();
       }
+      await refreshUser();
 
       setSuccessMessage("Skill offering published successfully! Students can now find you in Search.");
       // Reset form

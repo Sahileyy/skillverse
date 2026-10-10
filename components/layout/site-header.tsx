@@ -86,17 +86,17 @@ export default function SiteHeader() {
             {user?.role === "MENTOR" ? (
               <>
                 <Link
-                  className="text-[13px] font-semibold text-slate-600 transition-colors hover:text-slate-950"
-                  href="/search"
-                >
-                  Find Peers & Mentors
-                </Link>
-                <Link
                   className="inline-flex items-center gap-1.5 text-[13px] font-bold text-blue-600 transition-colors hover:text-blue-800"
                   href="/mentor/dashboard"
                 >
                   <span className="size-1.5 rounded-full bg-blue-600 animate-pulse" />
                   <span>Mentor Studio</span>
+                </Link>
+                <Link
+                  className="text-[13px] font-semibold text-slate-600 transition-colors hover:text-slate-950"
+                  href="/community"
+                >
+                  Community Projects
                 </Link>
                 <Link
                   className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-indigo-700 transition-colors hover:text-indigo-950"
@@ -109,9 +109,37 @@ export default function SiteHeader() {
                 </Link>
                 <Link
                   className="text-[13px] font-semibold text-slate-600 transition-colors hover:text-slate-950"
+                  href="/messages"
+                >
+                  Messages
+                </Link>
+              </>
+            ) : user?.role === "ADMIN" ? (
+              <>
+                <Link
+                  className="inline-flex items-center gap-1.5 text-[13px] font-bold text-purple-600 transition-colors hover:text-purple-800"
+                  href="/mentor/dashboard"
+                >
+                  <span className="size-1.5 rounded-full bg-purple-600" />
+                  <span>Admin Studio</span>
+                </Link>
+                <Link
+                  className="text-[13px] font-semibold text-slate-600 transition-colors hover:text-slate-950"
+                  href="/search"
+                >
+                  Catalog
+                </Link>
+                <Link
+                  className="text-[13px] font-semibold text-slate-600 transition-colors hover:text-slate-950"
                   href="/community"
                 >
                   Community Projects
+                </Link>
+                <Link
+                  className="text-[13px] font-semibold text-slate-600 transition-colors hover:text-slate-950"
+                  href="/assessment?quiz=mentor_accreditation"
+                >
+                  Accreditation
                 </Link>
               </>
             ) : (
@@ -354,6 +382,24 @@ export default function SiteHeader() {
                   </div>
                 )}
               </div>
+
+              {/* Direct Logout Button for Fast UX */}
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 px-3 py-2 text-xs font-bold text-slate-700 transition shadow-2xs cursor-pointer"
+                title="Sign Out"
+              >
+                <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                </svg>
+                <span>Logout</span>
+              </button>
+            </div>
+          ) : isLoading ? (
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-20 rounded-xl bg-slate-100 animate-pulse" />
+              <div className="size-9 rounded-full bg-slate-100 animate-pulse" />
             </div>
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
@@ -434,19 +480,19 @@ export default function SiteHeader() {
             {user?.role === "MENTOR" ? (
               <>
                 <Link
-                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
-                  href="/search"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Find Peers & Mentors
-                </Link>
-                <Link
                   className="rounded-xl px-3 py-2.5 text-sm font-bold text-blue-600 hover:bg-blue-50 flex items-center justify-between transition-colors"
                   href="/mentor/dashboard"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <span>Mentor Studio</span>
                   <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">★ Dashboard</span>
+                </Link>
+                <Link
+                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                  href="/community"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Community Projects
                 </Link>
                 <Link
                   className="rounded-xl px-3 py-2.5 text-sm font-bold text-indigo-700 hover:bg-indigo-50 flex items-center justify-between transition-colors"
@@ -458,10 +504,42 @@ export default function SiteHeader() {
                 </Link>
                 <Link
                   className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                  href="/messages"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Messages
+                </Link>
+              </>
+            ) : user?.role === "ADMIN" ? (
+              <>
+                <Link
+                  className="rounded-xl px-3 py-2.5 text-sm font-bold text-purple-600 hover:bg-purple-50 flex items-center justify-between transition-colors"
+                  href="/mentor/dashboard"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span>Admin Studio</span>
+                  <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700">★ Admin</span>
+                </Link>
+                <Link
+                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                  href="/search"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Catalog
+                </Link>
+                <Link
+                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
                   href="/community"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Community Projects
+                </Link>
+                <Link
+                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                  href="/assessment?quiz=mentor_accreditation"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Accreditation
                 </Link>
               </>
             ) : (
@@ -519,7 +597,9 @@ export default function SiteHeader() {
           </nav>
 
           <div className="mt-4 pt-3 border-t border-slate-200">
-            {!isLoading && user ? (
+            {isLoading ? (
+              <div className="h-11 w-full rounded-xl bg-slate-100 animate-pulse" />
+            ) : user ? (
               <button
                 className="w-full rounded-xl border border-rose-200 bg-rose-50/60 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-100 transition"
                 onClick={() => {

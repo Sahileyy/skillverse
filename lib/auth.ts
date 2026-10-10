@@ -46,3 +46,19 @@ export async function getSession(): Promise<JWTPayload | null> {
   if (!token) return null;
   return verifyJWT(token);
 }
+
+export async function requireAuth(allowedRoles?: Role[]) {
+  const session = await getSession();
+  if (!session) {
+    return { error: "Unauthorized. Please sign in.", status: 401 as const, session: null };
+  }
+  if (allowedRoles && !allowedRoles.includes(session.role)) {
+    return {
+      error: `Forbidden. Role '${session.role}' is not authorized.`,
+      status: 403 as const,
+      session: null,
+    };
+  }
+  return { error: null, status: 200 as const, session };
+}
+

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession, signJWT, AUTH_COOKIE_NAME } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -35,11 +35,13 @@ export async function POST(req: NextRequest) {
       levelDescription = "Solid technical baseline. Certified for foundational tutoring, concept walkthroughs, and beginner debugging assistance.";
     }
 
-    // Fetch user to check XP award eligibility
+    // Fetch user to check XP award eligibility and role upgrade
     const user = await prisma.user.findUnique({
       where: { id: session.id },
       select: {
         id: true,
+        name: true,
+        email: true,
         role: true,
         xp: true,
         completedActivities: true,
@@ -60,6 +62,9 @@ export async function POST(req: NextRequest) {
       updatedActivities.push(ACTIVITY_KEY);
     }
 
+    // Upgrade to MENTOR if user passed the 60% threshold and was a STUDENT
+    const targetRole = score >= 60 && user.role === "STUDENT" ? "MENTOR" : user.role;
+
     // Update Profile and User records in database
     await prisma.$transaction([
       // 1. Update Profile with decided mentor level and score
@@ -76,10 +81,11 @@ export async function POST(req: NextRequest) {
         },
       }),
 
-      // 2. Award XP if eligible
+      // 2. Award XP and update role
       prisma.user.update({
         where: { id: session.id },
         data: {
+          role: targetRole,
           xp: { increment: xpAwarded },
           completedActivities: updatedActivities,
         },
@@ -102,16 +108,37 @@ export async function POST(req: NextRequest) {
     else if (score >= 75) mentorRating = 4.8;
     else if (score >= 60) mentorRating = 4.5;
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       score,
       level: decidedLevel,
       tier: tierTitle,
       rating: mentorRating,
       description: levelDescription,
+      role: targetRole,
       xpAwarded,
       message: `Your AI Mentor level has been evaluated and officially set to "${decidedLevel}" (Rating: ${mentorRating}★)!`,
     });
+
+    // Re-issue JWT cookie if role updated so client session updates immediately
+    if (targetRole !== session.role) {
+      const newToken = await signJWT({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: targetRole,
+      });
+
+      response.cookies.set(AUTH_COOKIE_NAME, newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error("POST /api/mentor/assessment error:", error);
     return NextResponse.json({ error: "Failed to process mentor evaluation" }, { status: 500 });

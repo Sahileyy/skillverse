@@ -468,21 +468,32 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
 
             {/* Quick Action / Direct Message */}
             <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/messages"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50"
-              >
-                <svg className="size-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                Send Message
-              </Link>
-              <a
-                href="#booking-widget"
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-900 px-6 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-600"
-              >
-                Book a Session ↓
-              </a>
+              {user && (user.id === mentorId || user.name === mentor.name) ? (
+                <Link
+                  href="/mentor/dashboard"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700"
+                >
+                  Manage in Studio ⚙
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/messages"
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50"
+                  >
+                    <svg className="size-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    Send Message
+                  </Link>
+                  <a
+                    href="#booking-widget"
+                    className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-900 px-6 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-600"
+                  >
+                    {user?.role === "MENTOR" ? "View Slots ↓" : "Book a Session ↓"}
+                  </a>
+                </>
+              )}
             </div>
           </div>
 
@@ -741,8 +752,42 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                     Book another slot
                   </button>
                 </div>
+              ) : user && (user.id === mentorId || user.name === mentor.name) ? (
+                <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 text-center">
+                  <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-sm shadow-xs">
+                    ⚙
+                  </div>
+                  <h3 className="mt-2 text-sm font-bold text-blue-900">This is Your Public Mentor Profile</h3>
+                  <p className="mt-1 text-xs text-blue-700">
+                    Students discover and book your sessions through this page. You cannot book sessions with yourself.
+                  </p>
+                  <Link
+                    href="/mentor/dashboard"
+                    className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white transition hover:bg-blue-700 shadow-xs"
+                  >
+                    Open Mentor Studio to Manage Offerings →
+                  </Link>
+                </div>
               ) : (
                 <div className="mt-6">
+                  {/* Fellow Mentor Collaboration Callout */}
+                  {user?.role === "MENTOR" && (
+                    <div className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50/80 p-3 text-center">
+                      <p className="text-xs font-semibold text-indigo-900">
+                        Peer Mentor View
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-indigo-700">
+                        Want to sync or collaborate with {mentor.name.split(" ")[0]}?
+                      </p>
+                      <Link
+                        href="/messages"
+                        className="mt-2 inline-flex h-8 w-full items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold text-white transition hover:bg-indigo-700"
+                      >
+                        Send Peer Message 💬
+                      </Link>
+                    </div>
+                  )}
+
                   {/* Price Summary */}
                   <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-xs">
                     <span className="font-semibold text-slate-600">Total Price:</span>

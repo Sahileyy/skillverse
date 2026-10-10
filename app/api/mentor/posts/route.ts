@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession, signJWT, AUTH_COOKIE_NAME } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { createPostSchema, updatePostStatusSchema } from "@/lib/validations/post";
 
@@ -74,6 +74,8 @@ export async function POST(req: NextRequest) {
       where: { id: session.id },
       select: {
         id: true,
+        name: true,
+        email: true,
         role: true,
         xp: true,
         completedActivities: true,
@@ -95,6 +97,8 @@ export async function POST(req: NextRequest) {
       updatedActivities.push(ACTIVITY_KEY);
     }
 
+    const targetRole = user.role === "STUDENT" ? "MENTOR" : user.role;
+
     const [post] = await prisma.$transaction([
       prisma.post.create({
         data: {
@@ -115,14 +119,14 @@ export async function POST(req: NextRequest) {
       prisma.user.update({
         where: { id: session.id },
         data: {
-          role: user.role === "STUDENT" ? "MENTOR" : undefined,
+          role: targetRole,
           xp: { increment: xpAwarded },
           completedActivities: { set: updatedActivities },
         },
       }),
     ]);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       post,
       xpAwarded,
@@ -130,6 +134,26 @@ export async function POST(req: NextRequest) {
         ? "Skill offering published! You earned +15 XP."
         : "Skill offering published successfully.",
     });
+
+    // Re-issue JWT cookie if role updated from STUDENT to MENTOR
+    if (targetRole !== session.role) {
+      const newToken = await signJWT({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: targetRole,
+      });
+
+      response.cookies.set(AUTH_COOKIE_NAME, newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error("POST /api/mentor/posts error:", error);
     return NextResponse.json({ error: "Failed to publish skill ad" }, { status: 500 });

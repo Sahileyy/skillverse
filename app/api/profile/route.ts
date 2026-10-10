@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession, signJWT, AUTH_COOKIE_NAME } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { profileUpdateSchema } from "@/lib/validations/profile";
 
@@ -99,11 +99,14 @@ export async function PUT(req: NextRequest) {
       completedActivities.push(ACTIVITY_KEY);
     }
 
+    const targetRole = parsed.data.role || currentUser.role;
+
     // Transaction to update User and Profile atomically
     const updatedUser = await prisma.user.update({
       where: { id: session.id },
       data: {
         name: name.trim(),
+        role: targetRole,
         image: image || null,
         xp: { increment: xpToAdd },
         completedActivities: { set: completedActivities },
@@ -112,7 +115,7 @@ export async function PUT(req: NextRequest) {
             create: {
               education: education || null,
               bio: bio || null,
-              headline: headline || (currentUser.role === "MENTOR" ? "Mentor" : "Student"),
+              headline: headline || (targetRole === "MENTOR" ? "Mentor" : "Student"),
               skills,
               interests,
               careerGoal: careerGoal || null,
@@ -144,12 +147,32 @@ export async function PUT(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: updatedUser,
       xpAwarded: xpToAdd,
       message: xpToAdd > 0 ? "Profile completed! +20 XP awarded." : "Profile updated successfully.",
     });
+
+    // Re-issue JWT cookie if role or critical fields changed
+    if (targetRole !== session.role || updatedUser.name !== session.name) {
+      const newToken = await signJWT({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        name: updatedUser.name,
+        role: updatedUser.role,
+      });
+
+      response.cookies.set(AUTH_COOKIE_NAME, newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error("PUT /api/profile error:", error);
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
