@@ -402,33 +402,26 @@ export default function MentorDashboardView() {
               </div>
 
               <div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
                     {user?.name || "Mentor"}
                   </h1>
-                  <span className="rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-emerald-800">
-                    Verified Mentor
-                  </span>
-                  {user?.profile?.mentorLevel ? (
-                    <span className="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[10px] font-bold text-amber-900">
-                      👑 {user.profile.mentorLevel}
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-semibold text-slate-600">
-                      Accreditation Pending
+                  <svg className="size-4 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  {user?.profile?.mentorLevel && (
+                    <span className="text-xs font-medium text-slate-500">
+                      • {user.profile.mentorLevel}
                     </span>
                   )}
                 </div>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                   {user?.profile?.headline || "Peer Mentor & Technical Advisor"} • {user?.email}
                 </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
-                    ⚡ {user?.xp || 0} XP
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700">
-                    ✓ Accepting Student Inquiries
-                  </span>
+                <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-500 font-medium">
+                  <span>⚡ {user?.xp || 0} XP</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-emerald-600">Accepting inquiries</span>
                 </div>
               </div>
             </div>
@@ -739,22 +732,17 @@ export default function MentorDashboardView() {
                         )}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <h4 className="text-sm font-bold text-slate-900">{user?.name || "Your Name"}</h4>
-                          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-700">
-                            MENTOR
-                          </span>
+                          <svg className="size-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
                         </div>
                         <p className="text-[11px] text-slate-500">
-                          {user?.profile?.headline || "Experienced Peer Mentor"}
+                          {user?.profile?.mentorLevel || user?.profile?.headline || "Experienced Peer Mentor"}
                         </p>
                       </div>
                     </div>
-                    {user?.profile?.mentorLevel && (
-                      <span className="rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                        {user.profile.mentorLevel}
-                      </span>
-                    )}
                   </div>
 
                   {/* Skill Badge & Title */}

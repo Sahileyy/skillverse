@@ -439,22 +439,16 @@ export default function ProfileView() {
               </div>
 
               <div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">{user.name}</h1>
-                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${
-                    role === "ADMIN"
-                      ? "bg-purple-100 text-purple-700"
-                      : role === "MENTOR"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-blue-100 text-blue-700"
-                  }`}>
-                    {role}
-                  </span>
-                  {role === "MENTOR" && user.profile?.mentorLevel && (
-                    <span className="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-amber-900">
-                      👑 {user.profile.mentorLevel}
-                    </span>
+                  {role === "MENTOR" && (
+                    <svg className="size-4 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
                   )}
+                  <span className="text-xs font-medium text-slate-500">
+                    • {role === "MENTOR" && user.profile?.mentorLevel ? user.profile.mentorLevel : role === "MENTOR" ? "Mentor" : role === "ADMIN" ? "Admin" : "Member"}
+                  </span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{user.email}</p>
                 {user.profile?.headline && (

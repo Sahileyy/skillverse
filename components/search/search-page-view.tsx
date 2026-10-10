@@ -249,7 +249,7 @@ export default function SearchPageView() {
               const headline =
                 p.user?.profile?.headline ||
                 (p.user?.profile?.mentorLevel
-                  ? `👑 ${p.user.profile.mentorLevel} • Verified Peer`
+                  ? `${p.user.profile.mentorLevel} • Verified Peer`
                   : "Verified Peer Mentor");
 
               const revs = p.user?.reviewsRecv || [];
@@ -536,16 +536,11 @@ export default function SearchPageView() {
                           <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-white bg-emerald-500" />
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <h3 className="text-base font-bold text-slate-900">{post.mentorName}</h3>
-                            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                              MENTOR
-                            </span>
-                            {post.isVerifiedPeer && (
-                              <span className="rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[9px] font-bold text-emerald-800">
-                                ● LIVE AD
-                              </span>
-                            )}
+                            <svg className="size-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
                           </div>
                           <p className="text-xs font-medium text-slate-500">{post.mentorHeadline}</p>
                         </div>

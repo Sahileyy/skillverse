@@ -431,22 +431,16 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
               </div>
 
               <div>
-                <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
                     {mentor.name}
                   </h1>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-                    <svg className="size-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    VERIFIED MENTOR
+                  <svg className="size-5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs sm:text-sm font-medium text-slate-500">
+                    • {mentor.mentorLevel || "Verified Mentor"}
                   </span>
-                  {mentor.mentorLevel && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-900 shadow-2xs">
-                      <span>👑</span>
-                      <span>AI-Certified: {mentor.mentorLevel} {mentor.mentorScore ? `(${mentor.mentorScore}%)` : ""}</span>
-                    </span>
-                  )}
                 </div>
 
                 <p className="mt-1.5 text-sm font-medium text-slate-700 sm:text-base">
