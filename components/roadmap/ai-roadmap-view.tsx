@@ -1073,14 +1073,24 @@ export default function AIRoadmapView() {
                   </div>
                 </div>
 
-                {/* Skills required at this waypoint */}
-                <div className="mt-4 pt-4 border-t border-slate-200/60 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-bold text-slate-700 text-[11px] uppercase tracking-wider">Required Skills:</span>
-                  {currentWaypoint.skills.map((s) => (
-                    <span key={s} className="rounded-md border border-slate-200 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
-                      {s}
-                    </span>
-                  ))}
+                {/* Skills & Study Topics required at this waypoint */}
+                <div className="mt-4 pt-4 border-t border-slate-200/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-bold text-slate-700 text-[11px] uppercase tracking-wider">Required Skills:</span>
+                    {currentWaypoint.skills.map((s) => (
+                      <span key={s} className="rounded-md border border-slate-200 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+
+                  <Link
+                    href={`/search?q=${encodeURIComponent(currentWaypoint.skills[0] || currentWaypoint.title)}`}
+                    className="inline-flex items-center gap-1.5 font-bold text-indigo-600 hover:text-indigo-800 text-xs shrink-0"
+                  >
+                    <span>Browse & Choose Mentors for Stop {safeWaypointIndex + 1}</span>
+                    <span>→</span>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -1213,40 +1223,78 @@ export default function AIRoadmapView() {
                       ))}
                     </div>
 
-                    {/* Recommended Mentor Spotlight (Bridging the Gap) */}
-                    {node.recommendedMentor && (
-                      <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/50 p-3.5 sm:p-4">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={node.recommendedMentor.avatar}
-                              alt={node.recommendedMentor.name}
-                              className="size-10 rounded-full object-cover border-2 border-white shadow-xs"
-                            />
-                            <div>
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs font-bold text-slate-900">
-                                  {node.recommendedMentor.name}
-                                </span>
-                                <svg className="size-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                              <p className="text-[11px] text-slate-500">
-                                {node.recommendedMentor.headline}
-                              </p>
-                            </div>
-                          </div>
-
-                          <Link
-                            href={`/mentor/${node.recommendedMentor.id}`}
-                            className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-bold text-white shadow-xs transition hover:bg-blue-600"
-                          >
-                            Book 1:1 Gap Session →
-                          </Link>
+                    {/* Section Study Resources & Curriculum */}
+                    {node.resources && node.resources.length > 0 && (
+                      <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-3.5">
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                          <span>📚</span>
+                          <span>Section Study Guide & Key Resources:</span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {node.resources.map((res) => (
+                            <span
+                              key={res}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-2xs"
+                            >
+                              <span className="text-indigo-600">📖</span>
+                              {res}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     )}
+
+                    {/* Section-Based Mentor Search Recommendation (Student Freedom to Choose) */}
+                    <div className="mt-4 rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50/50 via-purple-50/20 to-white p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700 uppercase tracking-wide">
+                              Recommended Peer Mentors
+                            </span>
+                            <span className="text-[11px] font-medium text-slate-500">
+                              Student Choice Directory
+                            </span>
+                          </div>
+                          <h4 className="mt-1 text-xs font-bold text-slate-900">
+                            Search & Select Mentors for {node.title}
+                          </h4>
+                          <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600 max-w-xl">
+                            Select whoever you want from verified mentors specializing in this section based on ratings, schedules, and session pricing.
+                          </p>
+
+                          {/* Skill Search Chips */}
+                          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Search by skill:</span>
+                            {node.skills.map((skill) => (
+                              <Link
+                                key={skill}
+                                href={`/search?q=${encodeURIComponent(skill)}`}
+                                className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-white px-2 py-0.5 text-[10px] font-bold text-indigo-700 shadow-2xs transition hover:bg-indigo-50"
+                                title={`Search all mentors for ${skill}`}
+                              >
+                                <span>🔍 {skill}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex sm:flex-col shrink-0 gap-2">
+                          <Link
+                            href={`/search?q=${encodeURIComponent(node.skills[0] || node.title)}`}
+                            className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-600 text-center"
+                          >
+                            Explore & Choose Mentors →
+                          </Link>
+                          <Link
+                            href={`/assessment?skill=${encodeURIComponent(node.skills[0] || node.title)}`}
+                            className="inline-flex h-8 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
+                          >
+                            Take Section Quiz (+10 XP)
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
