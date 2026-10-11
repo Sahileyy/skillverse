@@ -21,11 +21,6 @@ type PlatformMetrics = {
     paid: number;
     active: number;
   };
-  bookings: {
-    total: number;
-    pending: number;
-    completed: number;
-  };
   reports: {
     total: number;
     pending: number;
@@ -91,43 +86,6 @@ type AdminPost = {
   };
 };
 
-type AdminBooking = {
-  id: string;
-  postId: string;
-  studentId: string;
-  mentorId: string;
-  status: "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED" | "CANCELLED";
-  scheduledAt: string | null;
-  meetingUrl: string | null;
-  createdAt: string;
-  student: {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    xp: number;
-  };
-  mentor: {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    xp: number;
-  };
-  post: {
-    id: string;
-    title: string;
-    skillName: string;
-    pricingType: "FREE" | "PAID";
-    priceAmount: number | null;
-  };
-  reviews: Array<{
-    id: string;
-    rating: number;
-    comment: string;
-  }>;
-};
-
 type AdminReport = {
   id: string;
   reporterId: string;
@@ -161,7 +119,7 @@ type AdminReport = {
   } | null;
 };
 
-type TabType = "overview" | "users" | "posts" | "bookings" | "reports";
+type TabType = "overview" | "users" | "posts" | "reports";
 
 export default function AdminDashboardView() {
   const { user, login } = useAuth();
@@ -171,7 +129,6 @@ export default function AdminDashboardView() {
   const [metrics, setMetrics] = useState<PlatformMetrics | null>(null);
   const [usersList, setUsersList] = useState<AdminUser[]>([]);
   const [postsList, setPostsList] = useState<AdminPost[]>([]);
-  const [bookingsList, setBookingsList] = useState<AdminBooking[]>([]);
   const [reportsList, setReportsList] = useState<AdminReport[]>([]);
 
   // Search & Filter state
@@ -213,11 +170,10 @@ export default function AdminDashboardView() {
 
     async function loadData() {
       try {
-        const [statsRes, usersRes, postsRes, bookingsRes, reportsRes] = await Promise.all([
+        const [statsRes, usersRes, postsRes, reportsRes] = await Promise.all([
           fetch("/api/admin/stats"),
           fetch("/api/admin/users"),
           fetch("/api/admin/posts"),
-          fetch("/api/admin/bookings"),
           fetch("/api/admin/reports"),
         ]);
 
@@ -234,10 +190,6 @@ export default function AdminDashboardView() {
         if (postsRes.ok) {
           const postsData = await postsRes.json();
           if (!isCancelled) setPostsList(postsData.posts || []);
-        }
-        if (bookingsRes.ok) {
-          const bookingsData = await bookingsRes.json();
-          if (!isCancelled) setBookingsList(bookingsData.bookings || []);
         }
         if (reportsRes.ok) {
           const reportsData = await reportsRes.json();
@@ -272,7 +224,7 @@ export default function AdminDashboardView() {
     }
   };
 
-  // User Actions
+  // User Actions (View, Role Edit, Delete/Remove)
   const handleUpdateUserRole = async (userId: string, role: "STUDENT" | "MENTOR" | "ADMIN") => {
     setIsUpdatingUser(true);
     try {
@@ -316,7 +268,7 @@ export default function AdminDashboardView() {
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to permanently delete user "${userName}"? This cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to permanently remove user "${userName}"? This will delete their account and associated postings.`)) {
       return;
     }
     try {
@@ -326,14 +278,14 @@ export default function AdminDashboardView() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete user");
 
-      showToast(`User "${userName}" deleted successfully`);
+      showToast(`User "${userName}" removed successfully`);
       triggerRefresh();
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : "Error deleting user", "error");
     }
   };
 
-  // Post Actions
+  // Post/Ad Actions (View, Activate/Pause, Delete/Remove)
   const handleUpdatePostStatus = async (postId: string, status: "ACTIVE" | "PAUSED" | "REMOVED") => {
     try {
       const res = await fetch("/api/admin/posts", {
@@ -352,7 +304,7 @@ export default function AdminDashboardView() {
   };
 
   const handleDeletePost = async (postId: string, title: string) => {
-    if (!confirm(`Permanently remove post: "${title}"?`)) return;
+    if (!confirm(`Permanently remove skill ad: "${title}"?`)) return;
     try {
       const res = await fetch(`/api/admin/posts?postId=${postId}`, {
         method: "DELETE",
@@ -360,28 +312,10 @@ export default function AdminDashboardView() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete post");
 
-      showToast(`Post deleted`);
+      showToast(`Skill ad removed`);
       triggerRefresh();
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : "Error deleting post", "error");
-    }
-  };
-
-  // Booking Actions
-  const handleUpdateBookingStatus = async (bookingId: string, status: "ACCEPTED" | "COMPLETED" | "CANCELLED") => {
-    try {
-      const res = await fetch("/api/admin/bookings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId, status }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update booking status");
-
-      showToast(`Booking marked as ${status}`);
-      triggerRefresh();
-    } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : "Error updating booking", "error");
     }
   };
 
@@ -423,7 +357,7 @@ export default function AdminDashboardView() {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  // NON-ADMIN STATE (CLEAN LIGHT THEME)
+  // NON-ADMIN STATE
   if (!user || user.role !== "ADMIN") {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-slate-50/50 px-5 py-16">
@@ -436,7 +370,7 @@ export default function AdminDashboardView() {
             SkillVerse Admin Control Center
           </h2>
           <p className="mt-2 text-xs leading-relaxed text-slate-600">
-            This dashboard is restricted to verified administrators. You are currently{" "}
+            This dashboard is restricted to verified administrators for viewing users, removing accounts, and moderating ads. You are currently{" "}
             {user ? (
               <span>
                 signed in as <strong>{user.name}</strong> ({user.role})
@@ -521,13 +455,13 @@ export default function AdminDashboardView() {
               href="/search"
               className="inline-flex items-center gap-1 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition"
             >
-              <span>View Catalog</span>
+              <span>Browse Catalog</span>
               <span>→</span>
             </Link>
           </div>
         </div>
 
-        {/* 1. ADMIN HERO BANNER (WEBSITE THEME) */}
+        {/* 1. ADMIN HERO BANNER */}
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
             <div className="flex items-start sm:items-center gap-4">
@@ -542,37 +476,35 @@ export default function AdminDashboardView() {
                   </h1>
                   <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-bold text-purple-700">
                     <span>★</span>
-                    <span>Super Administrator</span>
+                    <span>Platform Moderator</span>
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
-                  Logged in as <strong>{user.name}</strong> ({user.email}) • Database:{" "}
-                  <span className="font-semibold text-emerald-600">Live PostgreSQL (Neon)</span>
+                  Viewing & Moderating as <strong>{user.name}</strong> ({user.email}) • View/Remove Users & Moderate Ads
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
-                <span className="font-bold text-slate-900">{metrics?.users.total || usersList.length}</span> Users Total
+                <span className="font-bold text-slate-900">{metrics?.users.total || usersList.length}</span> Total Users
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
-                <span className="font-bold text-slate-900">{metrics?.posts.total || postsList.length}</span> Active Ads
+                <span className="font-bold text-slate-900">{metrics?.posts.studentPeerAds ?? 0}</span> Peer Ads
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
-                <span className="font-bold text-slate-900">{metrics?.bookings.total || bookingsList.length}</span> Bookings
+                <span className="font-bold text-slate-900">{metrics?.posts.mentorAds ?? 0}</span> Mentor Ads
               </div>
             </div>
           </div>
 
-          {/* Sub Navigation Tabs */}
+          {/* Sub Navigation Tabs (Streamlined to Users & Ads) */}
           <div className="mt-6 flex flex-wrap gap-2">
             {[
               { id: "overview", label: "Overview & Analytics", icon: "📊" },
-              { id: "users", label: `Users (${usersList.length})`, icon: "👥" },
-              { id: "posts", label: `Ads & Sessions (${postsList.length})`, icon: "📢" },
-              { id: "bookings", label: `Bookings (${bookingsList.length})`, icon: "📅" },
-              { id: "reports", label: `Moderation Reports (${reportsList.length})`, icon: "🚨" },
+              { id: "users", label: `Users Directory (${usersList.length})`, icon: "👥" },
+              { id: "posts", label: `Skill Ads (${postsList.length})`, icon: "📢" },
+              { id: "reports", label: `Moderation Flags (${reportsList.length})`, icon: "🚨" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -594,19 +526,19 @@ export default function AdminDashboardView() {
         {/* TAB 1: OVERVIEW & ANALYTICS */}
         {activeTab === "overview" && (
           <div className="space-y-8 animate-fade-in">
-            {/* KPI METRICS GRID (MATCHING THEME) */}
+            {/* KPI METRICS GRID */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {/* Total Users Card */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-500">Total Users</span>
+                  <span className="text-xs font-semibold text-slate-500">Total Registered Users</span>
                   <span className="rounded-lg bg-blue-50 border border-blue-100 px-2 py-0.5 text-xs text-blue-700 font-bold">
-                    👥 Community
+                    👥 Accounts
                   </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-3xl font-black text-slate-900">{metrics?.users.total || usersList.length}</span>
-                  <span className="text-xs text-slate-400">accounts</span>
+                  <span className="text-xs text-slate-400">users</span>
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500">
                   <span>Students: <strong className="text-slate-800">{metrics?.users.students ?? 0}</strong></span>
@@ -615,40 +547,39 @@ export default function AdminDashboardView() {
                 </div>
               </div>
 
-              {/* Total Skill Ads Card */}
+              {/* Student Peer Ads Card */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-500">Skill Ads & Sessions</span>
+                  <span className="text-xs font-semibold text-slate-500">Student Peer Ads</span>
                   <span className="rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-xs text-emerald-800 font-bold">
-                    📢 Catalog
+                    🌱 Peer Exchange
                   </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-slate-900">{metrics?.posts.total || postsList.length}</span>
-                  <span className="text-xs text-slate-400">published ads</span>
+                  <span className="text-3xl font-black text-slate-900">{metrics?.posts.studentPeerAds ?? 0}</span>
+                  <span className="text-xs text-slate-400">free ads</span>
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500">
-                  <span className="text-emerald-700 font-semibold">🌱 Peer: {metrics?.posts.studentPeerAds ?? 0}</span>
-                  <span className="text-blue-700 font-semibold">👑 Mentor: {metrics?.posts.mentorAds ?? 0}</span>
-                  <span>Active: {metrics?.posts.active ?? 0}</span>
+                  <span>Reward: <strong className="text-emerald-700">+20 XP each</strong></span>
+                  <span>Price: <strong className="text-emerald-700">100% Free</strong></span>
                 </div>
               </div>
 
-              {/* Total Bookings Card */}
+              {/* Industry Mentor Ads Card */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-500">Session Bookings</span>
-                  <span className="rounded-lg bg-amber-50 border border-amber-100 px-2 py-0.5 text-xs text-amber-800 font-bold">
-                    📅 Sessions
+                  <span className="text-xs font-semibold text-slate-500">Industry Mentor Ads</span>
+                  <span className="rounded-lg bg-blue-50 border border-blue-100 px-2 py-0.5 text-xs text-blue-700 font-bold">
+                    👑 Mentorship
                   </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-slate-900">{metrics?.bookings.total || bookingsList.length}</span>
-                  <span className="text-xs text-slate-400">1-on-1 sessions</span>
+                  <span className="text-3xl font-black text-slate-900">{metrics?.posts.mentorAds ?? 0}</span>
+                  <span className="text-xs text-slate-400">offerings</span>
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500">
-                  <span className="text-amber-700 font-semibold">Pending: {metrics?.bookings.pending ?? 0}</span>
-                  <span className="text-emerald-700 font-semibold">Completed: {metrics?.bookings.completed ?? 0}</span>
+                  <span>Paid: <strong className="text-blue-700">{metrics?.posts.paid ?? 0}</strong></span>
+                  <span>Free: <strong className="text-blue-700">{metrics?.posts.free ?? 0}</strong></span>
                 </div>
               </div>
 
@@ -657,18 +588,18 @@ export default function AdminDashboardView() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500">XP Economy</span>
                   <span className="rounded-lg bg-purple-50 border border-purple-100 px-2 py-0.5 text-xs text-purple-700 font-bold">
-                    ⚡ Badges & XP
+                    ⚡ Gamification
                   </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-3xl font-black text-slate-900">
                     {metrics?.economy.totalXpDistributed ?? usersList.reduce((acc, u) => acc + u.xp, 0)}
                   </span>
-                  <span className="text-xs text-slate-400">XP distributed</span>
+                  <span className="text-xs text-slate-400">XP issued</span>
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500">
                   <span>Avg: ~{metrics?.economy.averageXp ?? 15} XP/user</span>
-                  <span className="text-purple-700 font-medium">Milestones Active</span>
+                  <span className="text-purple-700 font-semibold">Scholar Milestones</span>
                 </div>
               </div>
             </div>
@@ -680,7 +611,7 @@ export default function AdminDashboardView() {
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <span>⚡ Quick Admin Operations</span>
                 </h3>
-                <p className="mt-1 text-xs text-slate-500">One-click administrative shortcuts and audit triggers.</p>
+                <p className="mt-1 text-xs text-slate-500">Administrative tools to view or remove users and ads.</p>
 
                 <div className="mt-5 space-y-2.5">
                   <button
@@ -688,8 +619,8 @@ export default function AdminDashboardView() {
                     onClick={() => setActiveTab("users")}
                     className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-700 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-900 transition"
                   >
-                    <span>Manage User Roles & Promote/Demote</span>
-                    <span className="text-purple-600 font-bold">Open Users →</span>
+                    <span>View & Remove Users / Edit Roles</span>
+                    <span className="text-purple-600 font-bold">Users Directory →</span>
                   </button>
 
                   <button
@@ -697,18 +628,17 @@ export default function AdminDashboardView() {
                     onClick={() => setActiveTab("posts")}
                     className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-900 transition"
                   >
-                    <span>Moderate Peer Ads & Mentor Offers</span>
-                    <span className="text-emerald-600 font-bold">Open Ads →</span>
+                    <span>View & Remove Published Skill Ads</span>
+                    <span className="text-emerald-600 font-bold">Ads Moderation →</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("reports")}
-                    className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-700 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-900 transition"
+                  <Link
+                    href="/search"
+                    className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition"
                   >
-                    <span>Review Community Content Flags</span>
-                    <span className="text-rose-600 font-bold">Open Reports →</span>
-                  </button>
+                    <span>Explore Public Ad Listings</span>
+                    <span className="text-slate-600 font-bold">Browse Catalog →</span>
+                  </Link>
                 </div>
               </div>
 
@@ -802,7 +732,7 @@ export default function AdminDashboardView() {
           </div>
         )}
 
-        {/* TAB 2: USERS MANAGEMENT */}
+        {/* TAB 2: USERS DIRECTORY (VIEW & REMOVE USERS) */}
         {activeTab === "users" && (
           <div className="space-y-6 animate-fade-in">
             {/* Search & Filters */}
@@ -846,7 +776,6 @@ export default function AdminDashboardView() {
                       <th className="px-5 py-3.5">Role</th>
                       <th className="px-5 py-3.5">XP & Milestone Badge</th>
                       <th className="px-5 py-3.5">Ads Published</th>
-                      <th className="px-5 py-3.5">Bookings</th>
                       <th className="px-5 py-3.5">Registered</th>
                       <th className="px-5 py-3.5 text-right">Actions</th>
                     </tr>
@@ -896,11 +825,6 @@ export default function AdminDashboardView() {
                             {u._count.posts} {u.role === "STUDENT" ? "Peer Ads" : "Mentor Ads"}
                           </td>
 
-                          <td className="px-5 py-4 text-slate-500">
-                            <span>Sent: {u._count.sentBookings}</span> •{" "}
-                            <span>Recv: {u._count.recvBookings}</span>
-                          </td>
-
                           <td className="px-5 py-4 text-slate-500 text-[11px]">
                             {new Date(u.createdAt).toLocaleDateString()}
                           </td>
@@ -923,7 +847,7 @@ export default function AdminDashboardView() {
                                   onClick={() => handleDeleteUser(u.id, u.name)}
                                   className="rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 px-2 py-1 text-[11px] font-bold text-rose-600 transition"
                                 >
-                                  Delete
+                                  Remove User
                                 </button>
                               )}
                             </div>
@@ -938,7 +862,7 @@ export default function AdminDashboardView() {
           </div>
         )}
 
-        {/* TAB 3: ADS & SESSIONS MANAGEMENT */}
+        {/* TAB 3: ADS MODERATION (VIEW & REMOVE ADS) */}
         {activeTab === "posts" && (
           <div className="space-y-6 animate-fade-in">
             {/* Filter Bar */}
@@ -954,7 +878,7 @@ export default function AdminDashboardView() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">Type:</span>
+                <span className="text-xs font-semibold text-slate-500">Ad Type:</span>
                 {(["ALL", "STUDENT", "MENTOR"] as const).map((r) => (
                   <button
                     key={r}
@@ -1057,7 +981,7 @@ export default function AdminDashboardView() {
                   {/* Actions Row */}
                   <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
                     <span className="text-[11px] text-slate-400">
-                      Bookings: {post._count.bookings} • Created: {new Date(post.createdAt).toLocaleDateString()}
+                      Created: {new Date(post.createdAt).toLocaleDateString()}
                     </span>
 
                     <div className="flex items-center gap-2">
@@ -1084,7 +1008,7 @@ export default function AdminDashboardView() {
                         onClick={() => handleDeletePost(post.id, post.title)}
                         className="rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 text-[11px] font-bold text-rose-600 transition"
                       >
-                        Delete
+                        Remove Ad
                       </button>
                     </div>
                   </div>
@@ -1093,101 +1017,14 @@ export default function AdminDashboardView() {
 
               {filteredPosts.length === 0 && (
                 <div className="col-span-2 rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center text-slate-500">
-                  <p className="text-sm font-bold text-slate-900">No ads found matching your filter criteria.</p>
+                  <p className="text-sm font-bold text-slate-900">No skill ads found matching your filter criteria.</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* TAB 4: BOOKINGS MANAGEMENT */}
-        {activeTab === "bookings" && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xs">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700">
-                  <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    <tr>
-                      <th className="px-5 py-3.5">Student Learner</th>
-                      <th className="px-5 py-3.5">Mentor / Peer</th>
-                      <th className="px-5 py-3.5">Session Title</th>
-                      <th className="px-5 py-3.5">Status</th>
-                      <th className="px-5 py-3.5">Meeting URL</th>
-                      <th className="px-5 py-3.5">Scheduled Date</th>
-                      <th className="px-5 py-3.5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {bookingsList.map((b) => (
-                      <tr key={b.id} className="hover:bg-slate-50/60 transition">
-                        <td className="px-5 py-4 font-bold text-slate-900">{b.student.name}</td>
-                        <td className="px-5 py-4 text-slate-800">
-                          {b.mentor.name}{" "}
-                          <span className="text-[10px] text-slate-400">({b.mentor.role})</span>
-                        </td>
-                        <td className="px-5 py-4 font-semibold text-purple-700 max-w-[200px] truncate">
-                          {b.post.title}
-                        </td>
-                        <td className="px-5 py-4">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-                              b.status === "COMPLETED"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : b.status === "ACCEPTED"
-                                ? "bg-blue-100 text-blue-800"
-                                : b.status === "PENDING"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-rose-100 text-rose-800"
-                            }`}
-                          >
-                            {b.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-slate-500 text-[11px] max-w-[150px] truncate">
-                          {b.meetingUrl || "—"}
-                        </td>
-                        <td className="px-5 py-4 text-slate-500 text-[11px]">
-                          {b.scheduledAt ? new Date(b.scheduledAt).toLocaleString() : "TBD"}
-                        </td>
-                        <td className="px-5 py-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {b.status !== "COMPLETED" && (
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateBookingStatus(b.id, "COMPLETED")}
-                                className="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-2 py-1 text-[10px] font-bold text-white shadow-xs transition"
-                              >
-                                Complete
-                              </button>
-                            )}
-                            {b.status !== "CANCELLED" && (
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateBookingStatus(b.id, "CANCELLED")}
-                                className="rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 px-2 py-1 text-[10px] font-bold text-rose-600 transition"
-                              >
-                                Cancel
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {bookingsList.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="text-center py-8 text-slate-500">
-                          No session bookings found in database.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: MODERATION REPORTS */}
+        {/* TAB 4: MODERATION REPORTS */}
         {activeTab === "reports" && (
           <div className="space-y-6 animate-fade-in">
             <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xs">
@@ -1276,7 +1113,7 @@ export default function AdminDashboardView() {
         )}
       </div>
 
-      {/* EDIT USER ROLE / XP MODAL (MATCHING THEME) */}
+      {/* EDIT USER ROLE / XP MODAL */}
       {selectedUserForEdit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-fade-in">
           <div className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-2xl">
