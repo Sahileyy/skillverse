@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
 import { getBadgeForXp } from "@/lib/badges";
@@ -251,8 +251,15 @@ export default function SearchPageView() {
   const [roleFilter, setRoleFilter] = useState<"ALL" | "MENTOR" | "STUDENT">(initialRole);
   const [sortBy, setSortBy] = useState<"rating" | "reviews" | "sessions">("rating");
   
+  const router = useRouter();
   const openLoginModal = useLoginModal();
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && user?.role === "ADMIN") {
+      router.replace("/admin");
+    }
+  }, [user, isLoading, router]);
 
   // Peer-to-peer ad modal state
   const [isPeerModalOpen, setIsPeerModalOpen] = useState(false);
@@ -486,6 +493,16 @@ export default function SearchPageView() {
     setPricingFilter("ALL");
     setRoleFilter("ALL");
   };
+
+  if (!isLoading && user?.role === "ADMIN") {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+        <div className="size-8 animate-spin rounded-full border-3 border-purple-600 border-t-transparent" />
+        <p className="text-sm font-bold text-slate-800">Redirecting to Admin Command Center...</p>
+        <p className="text-xs text-slate-500">Admins manage users and moderate ads directly from the Admin Dashboard.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/50 py-10 px-5 sm:px-8">

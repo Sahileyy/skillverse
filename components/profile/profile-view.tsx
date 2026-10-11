@@ -1063,8 +1063,15 @@ export default function ProfileView() {
                     Administrator Controls
                   </h3>
                   <p className="mt-1 text-xs text-purple-800">
-                    You have administrative access to moderate community projects, review reported content, and manage users.
+                    You have administrative access to view or remove users and moderate skill ads.
                   </p>
+                  <Link
+                    href="/admin"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-purple-700 transition"
+                  >
+                    <span>🛡️ Open Admin Dashboard</span>
+                    <span>→</span>
+                  </Link>
                 </div>
               )}
             </div>

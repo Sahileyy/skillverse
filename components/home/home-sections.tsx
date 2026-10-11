@@ -890,16 +890,10 @@ export default function HomeSections() {
             ) : user?.role === "ADMIN" ? (
               <>
                 <Link
-                  href="/mentor/dashboard"
-                  className="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-12 rounded-xl bg-purple-600 px-6 sm:px-7 text-xs sm:text-sm font-bold text-white transition hover:bg-purple-500 active:scale-95"
+                  href="/admin"
+                  className="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-12 rounded-xl bg-purple-600 px-6 sm:px-7 text-xs sm:text-sm font-bold text-white transition hover:bg-purple-500 active:scale-95 shadow-lg shadow-purple-500/20"
                 >
-                  Admin Studio →
-                </Link>
-                <Link
-                  href="/community"
-                  className="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-12 rounded-xl border border-slate-700 px-6 sm:px-7 text-xs sm:text-sm font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white active:scale-95"
-                >
-                  Community Projects
+                  Admin Command Center →
                 </Link>
               </>
             ) : user ? (

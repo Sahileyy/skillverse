@@ -451,13 +451,14 @@ export default function AdminDashboardView() {
               <span>{isLoading ? "Refreshing..." : "Refresh"}</span>
             </button>
 
-            <Link
-              href="/search"
-              className="inline-flex items-center gap-1 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition"
+            <button
+              type="button"
+              onClick={() => setActiveTab("posts")}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition cursor-pointer"
             >
-              <span>Browse Catalog</span>
+              <span>📢 Moderate Ads</span>
               <span>→</span>
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -632,13 +633,14 @@ export default function AdminDashboardView() {
                     <span className="text-emerald-600 font-bold">Ads Moderation →</span>
                   </button>
 
-                  <Link
-                    href="/search"
-                    className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition"
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("reports")}
+                    className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-900 transition cursor-pointer"
                   >
-                    <span>Explore Public Ad Listings</span>
-                    <span className="text-slate-600 font-bold">Browse Catalog →</span>
-                  </Link>
+                    <span>Inspect Safety Reports & Flags</span>
+                    <span className="text-amber-600 font-bold">Moderation Flags →</span>
+                  </button>
                 </div>
               </div>
 
