@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession, signJWT, AUTH_COOKIE_NAME } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { createPostSchema, updatePostStatusSchema } from "@/lib/validations/post";
+import { getBadgeForXp } from "@/lib/badges";
 
 export async function GET() {
   try {
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
       availability,
     } = parsed.data;
 
-    // Check user & ensure MENTOR role or update if needed
+    // Check user
     const user = await prisma.user.findUnique({
       where: { id: session.id },
       select: {
@@ -86,18 +87,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Award XP for posting a skill ad if first time
-    const ACTIVITY_KEY = "mentor_first_post_created";
-    const alreadyAwarded = user.completedActivities.includes(ACTIVITY_KEY);
+    const isStudent = user.role === "STUDENT";
+
+    // Students only post peer-to-peer FREE ads (no monetary pricing allowed)
+    const effectivePricingType = isStudent ? "FREE" : pricingType;
+    const effectivePriceAmount = isStudent ? null : (pricingType === "PAID" ? (priceAmount ?? 0) : null);
+
+    // Calculate XP reward: Students earn +20 XP for every peer-to-peer skill ad
     let xpAwarded = 0;
     const updatedActivities = [...user.completedActivities];
 
-    if (!alreadyAwarded) {
-      xpAwarded = 15;
-      updatedActivities.push(ACTIVITY_KEY);
+    if (isStudent) {
+      xpAwarded = 20;
+      updatedActivities.push(`student_peer_post_created:${Date.now()}`);
+    } else {
+      const ACTIVITY_KEY = "mentor_first_post_created";
+      const alreadyAwarded = user.completedActivities.includes(ACTIVITY_KEY);
+      if (!alreadyAwarded) {
+        xpAwarded = 15;
+        updatedActivities.push(ACTIVITY_KEY);
+      }
     }
 
-    const targetRole = user.role === "STUDENT" ? "MENTOR" : user.role;
+    // Role is preserved: Students stay STUDENTS, Mentors stay MENTORS
+    const targetRole = user.role;
 
     const [post] = await prisma.$transaction([
       prisma.post.create({
@@ -107,8 +120,8 @@ export async function POST(req: NextRequest) {
           category: category.trim(),
           title: title.trim(),
           description: description.trim(),
-          pricingType,
-          priceAmount: pricingType === "PAID" ? (priceAmount ?? 0) : null,
+          pricingType: effectivePricingType,
+          priceAmount: effectivePriceAmount,
           availability: availability.trim(),
           status: "ACTIVE",
         },
@@ -126,16 +139,22 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
+    const newTotalXp = user.xp + xpAwarded;
+    const userBadge = getBadgeForXp(newTotalXp);
+
     const response = NextResponse.json({
       success: true,
       post,
       xpAwarded,
-      message: xpAwarded > 0
-        ? "Skill offering published! You earned +15 XP."
-        : "Skill offering published successfully.",
+      newXp: newTotalXp,
+      badge: userBadge,
+      isPeerAd: isStudent,
+      message: isStudent
+        ? `Peer-to-peer ad published! You earned +${xpAwarded} XP towards your ${userBadge.name} badge.`
+        : (xpAwarded > 0 ? "Skill offering published! You earned +15 XP." : "Skill offering published successfully."),
     });
 
-    // Re-issue JWT cookie if role updated from STUDENT to MENTOR
+    // Re-issue JWT cookie only if role actually changed
     if (targetRole !== session.role) {
       const newToken = await signJWT({
         id: user.id,

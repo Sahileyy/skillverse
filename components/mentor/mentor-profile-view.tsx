@@ -357,6 +357,213 @@ export const MENTOR_PROFILES_DATABASE: Record<string, MentorDetail> = {
       },
     ],
   },
+  "mentor-karthik": {
+    id: "mentor-karthik",
+    name: "Karthik Rajan",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+    headline: "CS Student & Web Peer • Silver Explorer",
+    company: "Campus Tech Collective",
+    location: "Chennai, India",
+    timezone: "IST (UTC+5:30)",
+    mentorLevel: "Student Peer • Silver Explorer",
+    mentorScore: 78,
+    bio: [
+      "Hey! I'm Karthik, an undergraduate computer science student passionate about full-stack web development. I love building with React, Next.js, and TypeScript.",
+      "As a peer creator, I host 1-on-1 peer coding sessions where we can build components together, debug Next.js App Router code, and discuss coursework projects.",
+      "All sessions are 100% free peer exchanges aimed at helping each other grow, earn XP, and level up our skills together!",
+    ],
+    skills: ["Next.js", "React", "TypeScript", "Tailwind CSS", "JavaScript", "Git"],
+    experience: [
+      {
+        role: "Student Lead",
+        company: "Campus Open Source Club",
+        period: "2023 - Present",
+        description: "Organizing weekly peer code reviews and hackathon preparation groups for fellow students.",
+      },
+    ],
+    education: [
+      {
+        degree: "B.Tech in Computer Science",
+        institution: "Anna University",
+        year: "2022 - Present",
+      },
+    ],
+    stats: {
+      rating: 4.9,
+      reviewCount: 29,
+      sessionsCompleted: 82,
+      responseTime: "< 5 mins",
+      attendanceRate: "100%",
+    },
+    sessions: [
+      {
+        id: "sess-k1",
+        title: "Peer-to-Peer Next.js App Router Practice & Code Pairing",
+        description: "Hands-on collaborative coding: layout nesting, server actions, and deploying on Vercel.",
+        duration: "30 mins",
+        pricingType: "FREE",
+        priceAmount: null,
+        tag: "Peer Learning",
+      },
+    ],
+    availableSlots: [
+      {
+        date: "Tomorrow",
+        day: "Sat, Oct 12",
+        slots: ["10:00 AM", "02:00 PM", "05:00 PM"],
+      },
+      {
+        date: "Sunday",
+        day: "Sun, Oct 13",
+        slots: ["11:00 AM", "04:00 PM"],
+      },
+    ],
+    reviews: [
+      {
+        id: "rk1",
+        author: "Meera Krishnan",
+        authorRole: "CS Junior",
+        sessionTitle: "Next.js App Router Practice",
+        rating: 5,
+        date: "2 days ago",
+        comment: "Karthik was super friendly and helped me fix a tricky SSR hydration error in my final year project. Awesome peer session!",
+      },
+    ],
+  },
+  "mentor-anita": {
+    id: "mentor-anita",
+    name: "Anita Joseph",
+    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
+    headline: "Student Competitive Programmer • Gold Scholar",
+    company: "Competitive Coding Guild",
+    location: "Kochi, India",
+    timezone: "IST (UTC+5:30)",
+    mentorLevel: "Student Peer • Gold Scholar",
+    mentorScore: 89,
+    bio: [
+      "Competitive programmer and computer engineering student. ICPC Regionalist and passionate about data structures, binary trees, and graph algorithms.",
+      "I host free peer problem-solving sessions to help fellow students prepare for coding interviews and conquer LeetCode anxiety.",
+    ],
+    skills: ["Data Structures", "Algorithms", "C++", "Python", "Problem Solving", "Binary Trees"],
+    experience: [
+      {
+        role: "Competitive Coding Mentor",
+        company: "Student Dev Community",
+        period: "2023 - Present",
+        description: "Mentoring peers on problem pattern recognition and algorithmic time complexity analysis.",
+      },
+    ],
+    education: [
+      {
+        degree: "B.Tech in Computer Engineering",
+        institution: "Model Engineering College",
+        year: "2021 - Present",
+      },
+    ],
+    stats: {
+      rating: 5.0,
+      reviewCount: 73,
+      sessionsCompleted: 210,
+      responseTime: "< 5 mins",
+      attendanceRate: "99%",
+    },
+    sessions: [
+      {
+        id: "sess-a1",
+        title: "Peer DSA Problem Solving & LeetCode Pattern Practice",
+        description: "Collaborative two-pointer, recursion, and dynamic programming problem solving.",
+        duration: "30 mins",
+        pricingType: "FREE",
+        priceAmount: null,
+        tag: "DSA Practice",
+      },
+    ],
+    availableSlots: [
+      {
+        date: "Daily",
+        day: "Today",
+        slots: ["07:00 PM", "08:30 PM"],
+      },
+    ],
+    reviews: [
+      {
+        id: "ra1",
+        author: "Siddharth Rao",
+        authorRole: "Engineering Student",
+        sessionTitle: "Peer DSA Problem Solving",
+        rating: 5,
+        date: "Yesterday",
+        comment: "Anita broke down binary tree recursion patterns so clearly. Learning with a peer who just tackled these problems feels so relatable!",
+      },
+    ],
+  },
+  "mentor-rohan": {
+    id: "mentor-rohan",
+    name: "Rohan Verma",
+    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80",
+    headline: "CS Sophomore • Peer Code Practice & Review",
+    company: "Student Hackers",
+    location: "Pune, India",
+    timezone: "IST (UTC+5:30)",
+    mentorLevel: "Student Peer • Silver Explorer",
+    mentorScore: 74,
+    bio: [
+      "Second year CS undergrad who loves Python scripting and automation. Always down to hop on a call to debug scripts, talk through OOP concepts, and share study tips.",
+      "Completely free peer learning. We both earn XP and level up our badges together!",
+    ],
+    skills: ["Python", "OOP", "Beginner Programming", "Linux", "Scripting"],
+    experience: [
+      {
+        role: "Python Peer Tutor",
+        company: "Freshmen Study Circle",
+        period: "2024 - Present",
+        description: "Helping first-year students navigate Python syntax, loops, and OOP classes.",
+      },
+    ],
+    education: [
+      {
+        degree: "B.Sc in Computer Science",
+        institution: "Pune University",
+        year: "2023 - Present",
+      },
+    ],
+    stats: {
+      rating: 4.8,
+      reviewCount: 16,
+      sessionsCompleted: 38,
+      responseTime: "< 10 mins",
+      attendanceRate: "100%",
+    },
+    sessions: [
+      {
+        id: "sess-r1",
+        title: "Peer-to-Peer Python OOP & Beginner Scripting Help",
+        description: "Zero pressure Python coding buddy session: classes, inheritance, and debugging.",
+        duration: "30 mins",
+        pricingType: "FREE",
+        priceAmount: null,
+        tag: "Python Buddy",
+      },
+    ],
+    availableSlots: [
+      {
+        date: "Tomorrow",
+        day: "Sat, Oct 12",
+        slots: ["05:00 PM", "07:00 PM"],
+      },
+    ],
+    reviews: [
+      {
+        id: "rr1",
+        author: "Tanya Sen",
+        authorRole: "CS Freshman",
+        sessionTitle: "Python OOP Help",
+        rating: 5,
+        date: "3 days ago",
+        comment: "Rohan was patient and helped me understand self, __init__, and inheritance in Python. Great peer mentor!",
+      },
+    ],
+  },
 };
 
 // Fallback generator for other mentor IDs
@@ -371,6 +578,16 @@ function getMentorData(mentorId: string): MentorDetail {
     id: mentorId,
     name: mentorId.replace("mentor-", "").replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase()),
   };
+}
+
+function computeFutureDateIso(daysOffset: number): string {
+  const target = new Date();
+  target.setDate(target.getDate() + daysOffset);
+  return target.toISOString();
+}
+
+function createFallbackBookingId(): string {
+  return `bkg-${Date.now()}`;
 }
 
 export default function MentorProfileView({ mentorId }: { mentorId: string }) {
@@ -430,7 +647,7 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
           rawPrice: isPaid ? numericPrice : undefined,
           redeemXp: isPaid && redeemXp,
           slotTime: selectedSlot,
-          scheduledAt: new Date(Date.now() + (selectedDateIndex + 1) * 86400000).toISOString(),
+          scheduledAt: computeFutureDateIso(selectedDateIndex + 1),
         }),
       });
 
@@ -441,14 +658,14 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
       }
 
       setConfirmedBookingData({
-        id: data.booking?.id || "bkg-" + Date.now(),
+        id: data.booking?.id || createFallbackBookingId(),
         meetingUrl: data.booking?.meetingUrl,
         discountApplied: data.discountApplied,
       });
       setBookingConfirmed(true);
       await refreshUser();
-    } catch (err: any) {
-      setBookingError(err.message || "Failed to book mentorship session.");
+    } catch (err: unknown) {
+      setBookingError(err instanceof Error ? err.message : "Failed to book mentorship session.");
     } finally {
       setIsSubmittingBooking(false);
     }
@@ -492,11 +709,17 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                   <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
                     {mentor.name}
                   </h1>
-                  <svg className="size-5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  {mentor.mentorLevel?.includes("Student Peer") ? (
+                    <span className="rounded-full bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                      🌱 Student Peer Creator
+                    </span>
+                  ) : (
+                    <svg className="size-5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  )}
                   <span className="text-xs sm:text-sm font-medium text-slate-500">
-                    • {mentor.mentorLevel || "Verified Mentor"}
+                    • {mentor.mentorLevel || "Verified Member"}
                   </span>
                 </div>
 

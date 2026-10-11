@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
     const q = searchParams.get("q")?.trim();
     const category = searchParams.get("category")?.trim();
     const pricingType = searchParams.get("pricingType")?.trim();
+    const role = searchParams.get("role")?.trim()?.toUpperCase();
 
     // Build Prisma where clause
     const whereClause: Record<string, unknown> = {
@@ -22,6 +23,12 @@ export async function GET(req: NextRequest) {
 
     if (pricingType && (pricingType === "FREE" || pricingType === "PAID")) {
       whereClause.pricingType = pricingType;
+    }
+
+    if (role === "STUDENT" || role === "MENTOR") {
+      whereClause.user = {
+        role,
+      };
     }
 
     if (q) {

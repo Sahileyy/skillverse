@@ -276,6 +276,22 @@ export default function LoginModal({ onClose }: LoginModalProps) {
               {mode === "signin" ? "Sign Up" : "Sign In"}
             </button>
           </p>
+
+          {mode === "signin" && (
+            <div className="mt-2 border-t border-slate-100 pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("admin@gmail.com");
+                  setPassword("admin123");
+                }}
+                className="w-full flex items-center justify-between rounded-xl border border-purple-200 bg-purple-50/70 p-2.5 text-xs text-purple-900 font-semibold hover:bg-purple-100 transition"
+              >
+                <span>🛡️ Quick Fill Admin Credentials</span>
+                <span className="text-[11px] text-purple-700 font-mono">admin@gmail.com</span>
+              </button>
+            </div>
+          )}
         </form>
         </>
         )}

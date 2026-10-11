@@ -327,8 +327,8 @@ export default function ProfileView() {
       }
 
       setValidationResult(data.validation);
-    } catch (err: any) {
-      setValidationError(err.message || "Network error validating skills");
+    } catch (err: unknown) {
+      setValidationError(err instanceof Error ? err.message : "Network error validating skills");
     } finally {
       setIsValidatingSkills(false);
     }

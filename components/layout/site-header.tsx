@@ -118,10 +118,10 @@ export default function SiteHeader() {
               <>
                 <Link
                   className="inline-flex items-center gap-1.5 text-[13px] font-bold text-purple-600 transition-colors hover:text-purple-800"
-                  href="/mentor/dashboard"
+                  href="/admin"
                 >
                   <span className="size-1.5 rounded-full bg-purple-600" />
-                  <span>Admin Studio</span>
+                  <span>Admin Dashboard</span>
                 </Link>
                 <Link
                   className="text-[13px] font-semibold text-slate-600 transition-colors hover:text-slate-950"
@@ -313,7 +313,30 @@ export default function SiteHeader() {
                         <span>Direct Messages</span>
                       </Link>
 
-                      {user.role === "MENTOR" ? (
+                      {user.role === "ADMIN" ? (
+                        <>
+                          <Link
+                            href="/admin"
+                            onClick={() => setIsProfileOpen(false)}
+                            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-purple-700 bg-purple-50/70 hover:bg-purple-100 transition-colors"
+                          >
+                            <svg className="size-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
+                            </svg>
+                            <span>Admin Command Center</span>
+                          </Link>
+                          <Link
+                            href="/mentor/dashboard"
+                            onClick={() => setIsProfileOpen(false)}
+                            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                          >
+                            <svg className="size-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25z" />
+                            </svg>
+                            <span>Mentor Studio</span>
+                          </Link>
+                        </>
+                      ) : user.role === "MENTOR" ? (
                         <>
                           <Link
                             href="/mentor/dashboard"
@@ -514,10 +537,10 @@ export default function SiteHeader() {
               <>
                 <Link
                   className="rounded-xl px-3 py-2.5 text-sm font-bold text-purple-600 hover:bg-purple-50 flex items-center justify-between transition-colors"
-                  href="/mentor/dashboard"
+                  href="/admin"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <span>Admin Studio</span>
+                  <span>Admin Dashboard</span>
                   <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700">★ Admin</span>
                 </Link>
                 <Link

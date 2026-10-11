@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/auth/auth-context";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { CATEGORY_OPTIONS } from "@/lib/validations/post";
+import { getBadgeForXp } from "@/lib/badges";
 
 export type MentorPostItem = {
   id: string;
@@ -150,6 +151,7 @@ export default function MentorDashboardView() {
 
     try {
       setIsSubmitting(true);
+      const isStudent = user?.role === "STUDENT";
       const res = await fetch("/api/mentor/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -158,8 +160,8 @@ export default function MentorDashboardView() {
           category,
           title: title.trim(),
           description: description.trim(),
-          pricingType,
-          priceAmount: pricingType === "PAID" ? parseFloat(priceAmount) || 0 : null,
+          pricingType: isStudent ? "FREE" : pricingType,
+          priceAmount: isStudent ? null : (pricingType === "PAID" ? parseFloat(priceAmount) || 0 : null),
           availability: availability.trim(),
         }),
       });
@@ -176,7 +178,11 @@ export default function MentorDashboardView() {
       }
       await refreshUser();
 
-      setSuccessMessage("Skill offering published successfully! Students can now find you in Search.");
+      setSuccessMessage(
+        isStudent
+          ? `Peer-to-peer ad published! You earned +${data.xpAwarded || 20} XP towards your ${data.badge?.name || "Scholar"} badge.`
+          : "Skill offering published successfully! Students can now find you in Search."
+      );
       // Reset form
       setSkillName("");
       setTitle("");
@@ -266,70 +272,6 @@ export default function MentorDashboardView() {
     );
   }
 
-  // Student Account View with Quick Role Switch CTA
-  if (user && user.role === "STUDENT") {
-    return (
-      <div className="min-h-screen bg-slate-50/50 py-12 px-5 sm:px-8">
-        <div className="mx-auto max-w-3xl">
-          <div className="rounded-3xl border border-blue-200 bg-gradient-to-br from-white to-blue-50/40 p-8 shadow-xs">
-            <div className="flex items-center gap-3">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-blue-600 text-white font-black text-xl">
-                ✦
-              </span>
-              <div>
-                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 uppercase">
-                  Role Notice
-                </span>
-                <h1 className="text-xl font-extrabold text-slate-900 mt-1">
-                  Activate Mentor Mode
-                </h1>
-              </div>
-            </div>
-
-            <p className="mt-4 text-xs leading-relaxed text-slate-600">
-              You are currently registered with a <span className="font-bold text-slate-900">Student</span> profile.
-              The Mentor Studio is where experienced peers publish skill ads, set their session pricing, and offer 1-on-1 mentorship.
-            </p>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <span className="text-lg">📢</span>
-                <h3 className="font-bold text-xs text-slate-900 mt-2">Post Skill Offerings</h3>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  List skills like React, Python, or UI Design so students can discover and book sessions with you.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <span className="text-lg">👑</span>
-                <h3 className="font-bold text-xs text-slate-900 mt-2">AI Level Accreditation</h3>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Verify your technical competence and earn an official Tier 1–3 mentor certificate.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <button
-                type="button"
-                onClick={handleUpgradeToMentor}
-                disabled={isSwitchingRole}
-                className="rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-3 text-xs font-bold text-white shadow-xs transition disabled:opacity-50"
-              >
-                {isSwitchingRole ? "Activating..." : "Enable Mentor Features Now →"}
-              </button>
-              <Link
-                href="/search"
-                className="text-xs font-semibold text-slate-600 hover:text-slate-900"
-              >
-                Browse Mentors as Student instead
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-slate-50/50 py-10 px-5 sm:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -340,7 +282,9 @@ export default function MentorDashboardView() {
               Home
             </Link>
             <span>/</span>
-            <span className="text-slate-900 font-semibold">Mentor Studio</span>
+            <span className="text-slate-900 font-semibold">
+              {user?.role === "STUDENT" ? "Student Peer Studio" : "Mentor Studio"}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -348,7 +292,7 @@ export default function MentorDashboardView() {
               href="/search"
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition"
             >
-              <span>Explore Student Directory</span>
+              <span>Explore Public Catalog</span>
               <span>↗</span>
             </Link>
           </div>
@@ -388,14 +332,14 @@ export default function MentorDashboardView() {
           </div>
         )}
 
-        {/* 1. MENTOR HERO & ACCREDITATION BANNER */}
+        {/* 1. MENTOR / STUDENT HERO & BADGE BANNER */}
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
             <div className="flex items-start sm:items-center gap-4">
               <div className="flex size-16 sm:size-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950 text-xl sm:text-2xl font-bold text-white shadow-xs">
                 {user?.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.image} alt={user?.name || "Mentor"} className="size-full rounded-2xl object-cover" />
+                  <img src={user.image} alt={user?.name || "User"} className="size-full rounded-2xl object-cover" />
                 ) : (
                   user?.name ? user.name.slice(0, 2).toUpperCase() : "ME"
                 )}
@@ -404,24 +348,36 @@ export default function MentorDashboardView() {
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                    {user?.name || "Mentor"}
+                    {user?.name || "User"}
                   </h1>
-                  <svg className="size-4 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  {user?.profile?.mentorLevel && (
-                    <span className="text-xs font-medium text-slate-500">
-                      • {user.profile.mentorLevel}
+                  {user?.role === "STUDENT" ? (
+                    <span className="rounded-full bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                      🌱 Student Peer Creator
                     </span>
+                  ) : (
+                    <svg className="size-4 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  {user?.role === "STUDENT" ? (
+                    <span className="text-xs font-bold text-slate-600">
+                      • {getBadgeForXp(user.xp).icon} {getBadgeForXp(user.xp).name}
+                    </span>
+                  ) : (
+                    user?.profile?.mentorLevel && (
+                      <span className="text-xs font-medium text-slate-500">
+                        • {user.profile.mentorLevel}
+                      </span>
+                    )
                   )}
                 </div>
                 <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  {user?.profile?.headline || "Peer Mentor & Technical Advisor"} • {user?.email}
+                  {user?.profile?.headline || (user?.role === "STUDENT" ? "Student Peer Learner" : "Peer Mentor & Technical Advisor")} • {user?.email}
                 </p>
                 <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-500 font-medium">
                   <span>⚡ {user?.xp || 0} XP</span>
                   <span className="text-slate-300">•</span>
-                  <span className="text-emerald-600">Accepting inquiries</span>
+                  <span className="text-emerald-600">Accepting peer inquiries</span>
                 </div>
               </div>
             </div>
@@ -432,8 +388,19 @@ export default function MentorDashboardView() {
                 onClick={() => setActiveTab("create")}
                 className="rounded-xl bg-blue-600 hover:bg-blue-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02] flex items-center gap-2"
               >
-                <span>+ Post New Skill Ad</span>
+                <span>{user?.role === "STUDENT" ? "+ Post Peer Ad (+20 XP)" : "+ Post New Skill Ad"}</span>
               </button>
+              {user?.role === "STUDENT" && (
+                <button
+                  type="button"
+                  onClick={handleUpgradeToMentor}
+                  disabled={isSwitchingRole}
+                  className="rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3.5 py-2.5 text-xs font-bold text-blue-700 transition"
+                  title="Enable paid mentorship and mentor accreditation"
+                >
+                  {isSwitchingRole ? "Activating..." : "👑 Upgrade to Mentor"}
+                </button>
+              )}
               <Link
                 href="/profile"
                 className="rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-700 transition"
@@ -442,6 +409,33 @@ export default function MentorDashboardView() {
               </Link>
             </div>
           </div>
+
+          {/* Student Peer Mode Explanatory Ribbon */}
+          {user?.role === "STUDENT" && (
+            <div className="mt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-emerald-200/90 bg-emerald-50/70 p-4 text-emerald-950">
+              <div className="flex items-center gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-sm shadow-xs">
+                  🌱
+                </span>
+                <div>
+                  <p className="text-xs sm:text-sm font-bold text-emerald-900">
+                    Student Peer Creator Mode Active
+                  </p>
+                  <p className="text-[11px] sm:text-xs text-emerald-700">
+                    Your listings appear with the <strong>🌱 Student Peer</strong> badge in Search. All peer sessions are 100% free community exchanges that reward you with <strong>+20 XP</strong> and scholar badge progress!
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleUpgradeToMentor}
+                disabled={isSwitchingRole}
+                className="inline-flex shrink-0 items-center justify-center rounded-xl border border-blue-300 bg-white hover:bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-800 shadow-2xs transition"
+              >
+                {isSwitchingRole ? "Activating..." : "👑 Want to offer paid sessions? Upgrade"}
+              </button>
+            </div>
+          )}
 
           {/* Quick Metrics Cards */}
           <div className="grid grid-cols-2 gap-4 pt-6 sm:grid-cols-4">
@@ -616,63 +610,77 @@ export default function MentorDashboardView() {
                 </div>
 
                 {/* Pricing Type & Amount */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700">Session Model *</label>
-                    <div className="mt-1.5 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPricingType("FREE")}
-                        className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition border ${
-                          pricingType === "FREE"
-                            ? "bg-slate-900 text-white border-slate-900"
-                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        Free Peer Session
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPricingType("PAID")}
-                        className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition border ${
-                          pricingType === "PAID"
-                            ? "bg-slate-900 text-white border-slate-900"
-                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        Paid Mentorship
-                      </button>
+                {user?.role === "STUDENT" ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-900">Session Model:</span>
+                      <span className="rounded-full bg-emerald-200/90 px-2.5 py-0.5 text-[10px] font-black uppercase text-emerald-950">
+                        Free Peer Exchange
+                      </span>
                     </div>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-800">
+                      Student peer ads are 100% free community sessions. You earn <strong>+20 XP</strong> and advance your <strong>{getBadgeForXp(user.xp).name}</strong> badge tier!
+                    </p>
                   </div>
-
-                  {pricingType === "PAID" ? (
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700">
-                        Price (₹ INR / session) *
-                      </label>
-                      <div className="relative mt-1.5">
-                        <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-400">
-                          ₹
-                        </span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="50"
-                          value={priceAmount}
-                          onChange={(e) => setPriceAmount(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 pl-8 pr-3.5 py-2.5 text-xs text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                          placeholder="499"
-                        />
+                      <label className="block text-xs font-bold text-slate-700">Session Model *</label>
+                      <div className="mt-1.5 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPricingType("FREE")}
+                          className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition border ${
+                            pricingType === "FREE"
+                              ? "bg-slate-900 text-white border-slate-900"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          Free Peer Session
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPricingType("PAID")}
+                          className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition border ${
+                            pricingType === "PAID"
+                              ? "bg-slate-900 text-white border-slate-900"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          Paid Mentorship
+                        </button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center pt-5">
-                      <p className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
-                        ✓ Free sessions earn high peer reviews and boost your visibility in search!
-                      </p>
-                    </div>
-                  )}
-                </div>
+
+                    {pricingType === "PAID" ? (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700">
+                          Price (₹ INR / session) *
+                        </label>
+                        <div className="relative mt-1.5">
+                          <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-400">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="50"
+                            value={priceAmount}
+                            onChange={(e) => setPriceAmount(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 pl-8 pr-3.5 py-2.5 text-xs text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                            placeholder="499"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center pt-5">
+                        <p className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                          ✓ Free sessions earn high peer reviews and boost your visibility in search!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Availability Window */}
                 <div>
@@ -703,7 +711,11 @@ export default function MentorDashboardView() {
                     disabled={isSubmitting}
                     className="rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-2.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.01] disabled:opacity-50"
                   >
-                    {isSubmitting ? "Publishing Ad..." : "Publish Skill Ad (+15 XP)"}
+                    {isSubmitting
+                      ? "Publishing Ad..."
+                      : user?.role === "STUDENT"
+                      ? "Publish Peer Ad (+20 XP) 🚀"
+                      : "Publish Skill Ad (+15 XP)"}
                   </button>
                 </div>
               </form>
@@ -720,13 +732,27 @@ export default function MentorDashboardView() {
                 </p>
 
                 <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                  {/* Role Ribbon Preview */}
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    {user?.role === "STUDENT" ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                        🌱 Student Peer Ad • {getBadgeForXp(user.xp).icon} {getBadgeForXp(user.xp).name}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-800">
+                        👑 Industry Mentor • Verified
+                      </span>
+                    )}
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase">Preview</span>
+                  </div>
+
                   {/* Top Header */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="size-12 rounded-full overflow-hidden border border-slate-200 bg-slate-900 text-white font-bold flex items-center justify-center text-sm">
                         {user?.image ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={user.image} alt={user?.name || "Mentor"} className="size-full object-cover" />
+                          <img src={user.image} alt={user?.name || "User"} className="size-full object-cover" />
                         ) : (
                           user?.name?.slice(0, 2).toUpperCase() || "ME"
                         )}
@@ -734,12 +760,18 @@ export default function MentorDashboardView() {
                       <div>
                         <div className="flex items-center gap-1.5">
                           <h4 className="text-sm font-bold text-slate-900">{user?.name || "Your Name"}</h4>
-                          <svg className="size-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
+                          {user?.role === "STUDENT" ? (
+                            <span className="text-xs" title="Student Peer Learner">🎓</span>
+                          ) : (
+                            <svg className="size-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          )}
                         </div>
                         <p className="text-[11px] text-slate-500">
-                          {user?.profile?.mentorLevel || user?.profile?.headline || "Experienced Peer Mentor"}
+                          {user?.role === "STUDENT"
+                            ? `Student Peer • ${getBadgeForXp(user.xp).name}`
+                            : (user?.profile?.mentorLevel || user?.profile?.headline || "Experienced Peer Mentor")}
                         </p>
                       </div>
                     </div>
@@ -844,8 +876,17 @@ export default function MentorDashboardView() {
                     <div>
                       {/* Top Badges & Status */}
                       <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {user?.role === "STUDENT" ? (
+                            <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
+                              🌱 Peer Ad
+                            </span>
+                          ) : (
+                            <span className="rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-blue-700">
+                              👑 Mentor Ad
+                            </span>
+                          )}
+                          <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-800">
                             {post.skillName}
                           </span>
                           <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
