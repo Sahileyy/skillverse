@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
+import { Award, Target, Compass, Sparkles, Check, Lightbulb, BookOpen, Search, X, ArrowLeft, ArrowRight } from "@/components/ui/icons";
+
 
 export type RoadmapMilestone = {
   id: string;
@@ -556,7 +558,7 @@ export default function AIRoadmapView() {
         {user?.role === "MENTOR" && (
           <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50/80 p-4 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-2.5">
-              <span className="text-xl">👑</span>
+              <Award className="size-5 shrink-0 text-amber-700" />
               <div>
                 <p className="font-bold">You are signed in as a Verified Mentor</p>
                 <p className="text-[11px] text-amber-800">
@@ -567,15 +569,17 @@ export default function AIRoadmapView() {
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/mentor/dashboard"
-                className="rounded-xl bg-slate-900 px-3.5 py-1.5 font-bold text-white hover:bg-slate-800 text-xs"
+                className="rounded-xl bg-slate-900 px-3.5 py-1.5 font-bold text-white hover:bg-slate-800 text-xs inline-flex items-center gap-1.5"
               >
-                Mentor Studio →
+                <span>Mentor Studio</span>
+                <ArrowRight className="size-3" />
               </Link>
               <Link
                 href="/assessment?quiz=mentor_accreditation"
-                className="rounded-xl border border-amber-300 bg-white px-3 py-1.5 font-bold text-amber-900 hover:bg-amber-100 text-xs"
+                className="rounded-xl border border-amber-300 bg-white px-3 py-1.5 font-bold text-amber-900 hover:bg-amber-100 text-xs inline-flex items-center gap-1.5"
               >
-                Accreditation Test →
+                <span>Accreditation Test</span>
+                <ArrowRight className="size-3" />
               </Link>
             </div>
           </div>
@@ -587,7 +591,7 @@ export default function AIRoadmapView() {
             AI Career Roadmap & Skill Gap Analyzer
           </h1>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-600">
-            Map your learning path: Current Baseline Skills → Identified Gaps → Recommended Mentors → Target Position.
+            Map your learning path: Current Baseline Skills to Identified Gaps, Recommended Mentors, and Target Position.
           </p>
         </div>
 
@@ -596,8 +600,8 @@ export default function AIRoadmapView() {
           <div className="mt-8 rounded-3xl border border-indigo-300 bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 p-6 sm:p-7 text-white shadow-lg animate-fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
               <div className="flex items-start gap-4">
-                <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white text-2xl shadow-md">
-                  🎯
+                <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md">
+                  <Target className="size-6 text-white" />
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -609,7 +613,7 @@ export default function AIRoadmapView() {
                     </span>
                     {assessmentVerified && (
                       <span className="rounded-full bg-indigo-500/30 border border-indigo-400/30 px-2 py-0.5 text-[10px] font-semibold text-indigo-100">
-                        ✓ AI-Verified Status
+                        AI-Verified Status
                       </span>
                     )}
                   </div>
@@ -653,7 +657,7 @@ export default function AIRoadmapView() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-indigo-100">
             <div className="flex items-center gap-3">
               <div className="flex size-11 items-center justify-center rounded-2xl bg-indigo-600 text-white font-bold text-xl shadow-xs">
-                🧭
+                <Compass className="size-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -696,8 +700,8 @@ export default function AIRoadmapView() {
                 </>
               ) : (
                 <>
-                  <span>⚡ Generate AI Roadmap</span>
-                  <span>→</span>
+                  <span>Generate AI Roadmap</span>
+                  <ArrowRight className="size-3.5" />
                 </>
               )}
             </button>
@@ -736,7 +740,7 @@ export default function AIRoadmapView() {
           <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 shadow-xs flex items-center justify-between animate-fade-in">
             <div className="flex items-center gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 font-black text-lg">
-                ⚡
+                <Sparkles className="size-5 text-slate-950" />
               </span>
               <div>
                 <p className="font-bold text-sm">+{xpAlert.amount} XP Earned!</p>
@@ -826,7 +830,7 @@ export default function AIRoadmapView() {
               disabled={isSavingGoal || user?.profile?.careerGoal === activePathway.title}
               className="h-9 px-4 rounded-xl bg-slate-900 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-40"
             >
-              {isSavingGoal ? "Saving..." : user?.profile?.careerGoal === activePathway.title ? "✓ Saved on Profile" : "Set as My Career Goal"}
+              {isSavingGoal ? "Saving..." : user?.profile?.careerGoal === activePathway.title ? "Saved on Profile" : "Set as My Career Goal"}
             </button>
           </div>
 
@@ -856,7 +860,7 @@ export default function AIRoadmapView() {
                     </span>
                   ))
                 ) : (
-                  <p className="text-xs text-emerald-600 font-semibold">✓ You already cover all core skills in this roadmap!</p>
+                  <p className="text-xs text-emerald-600 font-semibold">You already cover all core skills in this roadmap!</p>
                 )}
               </div>
             </div>
@@ -865,7 +869,7 @@ export default function AIRoadmapView() {
 
         {/* Demo Transparency Note */}
         <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-xs text-indigo-900 flex items-center gap-3">
-          <span className="text-base">💡</span>
+          <Lightbulb className="size-4 shrink-0 text-amber-500" />
           <div>
             <span className="font-bold">College Demo Career Roadmap:</span>
             <span className="ml-1 text-indigo-800">
@@ -899,7 +903,7 @@ export default function AIRoadmapView() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/30 border border-indigo-400/40 text-xl font-bold">
-                      🧭
+                      <Compass className="size-5 text-indigo-200" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -966,7 +970,7 @@ export default function AIRoadmapView() {
                                 : "bg-slate-800 text-slate-300"
                             }`}
                           >
-                            {isDone ? "✓" : isActive ? "📍" : idx + 1}
+                            {isDone ? <Check className="size-3.5" /> : idx + 1}
                           </span>
                           <div className="max-w-[130px] truncate text-[11px]">
                             <p className="truncate font-semibold">{m.title.replace(/^[0-9]+\.\s*/, "")}</p>
@@ -988,15 +992,17 @@ export default function AIRoadmapView() {
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="rounded-md bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-800">
-                        🧭 Turn-by-Turn GPS Focus
+                      <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-800">
+                        <Compass className="size-3 text-indigo-700" />
+                        Turn-by-Turn GPS Focus
                       </span>
                       <span className="text-xs font-semibold text-slate-500">
                         Waypoint {safeWaypointIndex + 1} of {activePathway.milestones.length}
                       </span>
                       {isCurrentWaypointDone && (
-                        <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                          ✓ Waypoint Cleared
+                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                          <Check className="size-3 text-emerald-700" />
+                          Waypoint Cleared
                         </span>
                       )}
                     </div>
@@ -1034,9 +1040,10 @@ export default function AIRoadmapView() {
                         }
                       }}
                       disabled={safeWaypointIndex === 0}
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition"
                     >
-                      ← Previous Stop
+                      <ArrowLeft className="size-3" />
+                      <span>Previous Stop</span>
                     </button>
 
                     <button
@@ -1048,13 +1055,23 @@ export default function AIRoadmapView() {
                           scrollToMilestone(activePathway.milestones[nextIdx].id, nextIdx);
                         }
                       }}
-                      className={`rounded-xl px-4 py-2 text-xs font-bold shadow-xs transition ${
+                      className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-xs transition ${
                         isCurrentWaypointDone
                           ? "border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
                           : "bg-indigo-600 text-white hover:bg-indigo-700"
                       }`}
                     >
-                      {isCurrentWaypointDone ? "✓ Peer Verified" : "Verify with Peer Meeting → (+10 XP)"}
+                      {isCurrentWaypointDone ? (
+                        <>
+                          <Check className="size-3.5" />
+                          <span>Peer Verified</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Verify with Peer Meeting (+10 XP)</span>
+                          <ArrowRight className="size-3.5" />
+                        </>
+                      )}
                     </button>
 
                     <button
@@ -1066,9 +1083,10 @@ export default function AIRoadmapView() {
                         }
                       }}
                       disabled={safeWaypointIndex === activePathway.milestones.length - 1}
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition"
                     >
-                      Next Stop →
+                      <span>Next Stop</span>
+                      <ArrowRight className="size-3" />
                     </button>
                   </div>
                 </div>
@@ -1089,7 +1107,7 @@ export default function AIRoadmapView() {
                     className="inline-flex items-center gap-1.5 font-bold text-indigo-600 hover:text-indigo-800 text-xs shrink-0"
                   >
                     <span>Browse & Choose Mentors for Stop {safeWaypointIndex + 1}</span>
-                    <span>→</span>
+                    <ArrowRight className="size-3.5" />
                   </Link>
                 </div>
               </div>
@@ -1129,7 +1147,7 @@ export default function AIRoadmapView() {
                         : "border-2 border-indigo-500 bg-white text-indigo-600"
                     }`}
                   >
-                    {isNodeDone ? "✓" : isActiveWaypoint ? "📍" : index + 1}
+                    {isNodeDone ? <Check className="size-3.5" /> : index + 1}
                   </button>
 
                   {/* Milestone Card */}
@@ -1153,7 +1171,7 @@ export default function AIRoadmapView() {
                         <div className="flex items-center gap-2">
                           {isActiveWaypoint && (
                             <span className="rounded bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white animate-pulse">
-                              📍 Current Navigation Waypoint
+                              Current Waypoint
                             </span>
                           )}
                           {node.stage === "BASELINE" && (
@@ -1207,7 +1225,17 @@ export default function AIRoadmapView() {
                             : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
                         }`}
                       >
-                        <span>{isNodeDone ? "✓ Verified & Done" : "Verify with Peer Meeting →"}</span>
+                        {isNodeDone ? (
+                          <>
+                            <Check className="size-3" />
+                            <span>Verified & Done</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Verify with Peer Meeting</span>
+                            <ArrowRight className="size-3" />
+                          </>
+                        )}
                       </button>
                     </div>
 
@@ -1227,7 +1255,7 @@ export default function AIRoadmapView() {
                     {node.resources && node.resources.length > 0 && (
                       <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-3.5">
                         <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                          <span>📚</span>
+                          <BookOpen className="size-4 text-slate-700" />
                           <span>Section Study Guide & Key Resources:</span>
                         </div>
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -1236,7 +1264,7 @@ export default function AIRoadmapView() {
                               key={res}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-2xs"
                             >
-                              <span className="text-indigo-600">📖</span>
+                              <BookOpen className="size-3 text-indigo-600" />
                               {res}
                             </span>
                           ))}
@@ -1270,10 +1298,11 @@ export default function AIRoadmapView() {
                               <Link
                                 key={skill}
                                 href={`/search?q=${encodeURIComponent(skill)}`}
-                                className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-white px-2 py-0.5 text-[10px] font-bold text-indigo-700 shadow-2xs transition hover:bg-indigo-50"
+                                className="inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-white px-2 py-0.5 text-[10px] font-bold text-indigo-700 shadow-2xs transition hover:bg-indigo-50"
                                 title={`Search all mentors for ${skill}`}
                               >
-                                <span>🔍 {skill}</span>
+                                <Search className="size-2.5" />
+                                <span>{skill}</span>
                               </Link>
                             ))}
                           </div>
@@ -1284,7 +1313,7 @@ export default function AIRoadmapView() {
                             href={`/search?q=${encodeURIComponent(node.skills[0] || node.title)}`}
                             className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-600 text-center"
                           >
-                            Explore & Choose Mentors →
+                            Explore & Choose Mentors
                           </Link>
                           <Link
                             href={`/assessment?skill=${encodeURIComponent(node.skills[0] || node.title)}`}
@@ -1316,7 +1345,7 @@ export default function AIRoadmapView() {
               href="/search"
               className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-900 px-6 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-600"
             >
-              Search All Mentors →
+              Search All Mentors
             </Link>
             <Link
               href="/assessment"
@@ -1336,7 +1365,7 @@ export default function AIRoadmapView() {
                 onClick={() => setPeerMeetingAlert(null)}
                 className="absolute right-5 top-5 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
               >
-                ✕
+                <X className="size-4" />
               </button>
 
               <div className="flex items-center gap-3">
@@ -1364,7 +1393,7 @@ export default function AIRoadmapView() {
               </div>
 
               <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3.5 text-xs text-indigo-900 flex items-start gap-2.5">
-                <span className="text-base">💡</span>
+                <Lightbulb className="size-4 shrink-0 text-amber-500" />
                 <p className="leading-relaxed">
                   Career roadmap progress unlocks <strong>+10 XP</strong> and advances your career level only when verified through an attended 1-on-1 peer session with an approved mentor.
                 </p>
@@ -1376,7 +1405,7 @@ export default function AIRoadmapView() {
                   onClick={() => setPeerMeetingAlert(null)}
                   className="w-full sm:flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
                 >
-                  Book Peer Meeting with Mentor →
+                  Book Peer Meeting with Mentor
                 </Link>
                 <button
                   type="button"
@@ -1393,3 +1422,4 @@ export default function AIRoadmapView() {
     </div>
   );
 }
+

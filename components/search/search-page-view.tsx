@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
 import { getBadgeForXp } from "@/lib/badges";
+import { Users, Star, X, Check, AlertTriangle } from "@/components/ui/icons";
 
 export type MentorPost = {
   id: string;
@@ -40,7 +41,7 @@ export const MENTOR_POSTS_DATA: MentorPost[] = [
     mentorHeadline: "Senior Frontend Engineer • Ex-Amazon",
     creatorRole: "MENTOR",
     badgeName: "Senior Mentor",
-    badgeIcon: "👑",
+    badgeIcon: "",
     skillName: "React",
     category: "Frontend",
     title: "1-on-1 React Component Patterns & State Optimization",
@@ -61,7 +62,7 @@ export const MENTOR_POSTS_DATA: MentorPost[] = [
     mentorHeadline: "AI Researcher & Data Scientist",
     creatorRole: "MENTOR",
     badgeName: "Master Mentor",
-    badgeIcon: "👑",
+    badgeIcon: "",
     skillName: "Python",
     category: "AI / ML",
     title: "Applied Machine Learning & PyTorch Model Training",
@@ -82,7 +83,7 @@ export const MENTOR_POSTS_DATA: MentorPost[] = [
     mentorHeadline: "Product Designer & Design Systems Lead",
     creatorRole: "MENTOR",
     badgeName: "Senior Mentor",
-    badgeIcon: "👑",
+    badgeIcon: "",
     skillName: "UI/UX Design",
     category: "UI/UX Design",
     title: "Production Design Systems & Figma Architecture",
@@ -103,7 +104,7 @@ export const MENTOR_POSTS_DATA: MentorPost[] = [
     mentorHeadline: "Backend Architect • Distributed Systems",
     creatorRole: "MENTOR",
     badgeName: "Senior Mentor",
-    badgeIcon: "👑",
+    badgeIcon: "",
     skillName: "PostgreSQL",
     category: "Backend",
     title: "Database Schema Design & Query Optimization",
@@ -125,7 +126,7 @@ export const MENTOR_POSTS_DATA: MentorPost[] = [
     creatorRole: "STUDENT",
     creatorXp: 180,
     badgeName: "Silver Explorer",
-    badgeIcon: "🥈",
+    badgeIcon: "",
     skillName: "Next.js",
     category: "Frontend",
     title: "Peer-to-Peer Next.js App Router Practice & Code Pairing",
@@ -148,7 +149,7 @@ export const MENTOR_POSTS_DATA: MentorPost[] = [
     creatorRole: "STUDENT",
     creatorXp: 340,
     badgeName: "Gold Practitioner",
-    badgeIcon: "🥇",
+    badgeIcon: "",
     skillName: "Data Structures",
     category: "Backend",
     title: "Peer DSA Problem Solving & LeetCode Pattern Practice",
@@ -170,7 +171,7 @@ export const MENTOR_POSTS_DATA: MentorPost[] = [
     mentorHeadline: "Mobile Engineer • Flutter & iOS",
     creatorRole: "MENTOR",
     badgeName: "Associate Mentor",
-    badgeIcon: "👑",
+    badgeIcon: "",
     skillName: "Flutter",
     category: "Mobile",
     title: "Cross-Platform Mobile App Development in Flutter",
@@ -191,7 +192,7 @@ export const MENTOR_POSTS_DATA: MentorPost[] = [
     mentorHeadline: "Cloud Solutions Architect • AWS Certified",
     creatorRole: "MENTOR",
     badgeName: "Senior Mentor",
-    badgeIcon: "👑",
+    badgeIcon: "",
     skillName: "Cloud & DevOps",
     category: "DevOps & Cloud",
     title: "CI/CD Pipelines, Docker & AWS Cloud Infrastructure",
@@ -213,7 +214,7 @@ export const MENTOR_POSTS_DATA: MentorPost[] = [
     creatorRole: "STUDENT",
     creatorXp: 140,
     badgeName: "Silver Explorer",
-    badgeIcon: "🥈",
+    badgeIcon: "",
     skillName: "Python",
     category: "AI / ML",
     title: "Peer-to-Peer Python OOP & Beginner Scripting Help",
@@ -354,7 +355,7 @@ export default function SearchPageView() {
                 creatorRole,
                 creatorXp: userXp,
                 badgeName: isStudent ? badge.name : (p.user?.profile?.mentorLevel || "Verified Mentor"),
-                badgeIcon: isStudent ? badge.icon : "👑",
+                badgeIcon: "",
                 skillName: p.skillName,
                 category: p.category,
                 title: p.title,
@@ -533,7 +534,7 @@ export default function SearchPageView() {
                 href="/mentor/dashboard"
                 className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02]"
               >
-                <span>👑 Manage Mentor Studio</span>
+                <span>Manage Mentor Studio</span>
                 <span>→</span>
               </Link>
             ) : (
@@ -548,7 +549,7 @@ export default function SearchPageView() {
                 }}
                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02]"
               >
-                <span>🌱 Post Peer-to-Peer Ad</span>
+                <span>Post Peer-to-Peer Ad</span>
                 <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black tracking-wide">+20 XP</span>
               </button>
             )}
@@ -570,8 +571,8 @@ export default function SearchPageView() {
         {/* Peer-to-Peer Community Banner */}
         <div className="mt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-emerald-200/90 bg-emerald-50/70 p-4 text-emerald-950 shadow-xs">
           <div className="flex items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-sm shadow-xs">
-              🌱
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
+              <Users className="size-4 text-white" />
             </span>
             <div>
               <p className="text-xs sm:text-sm font-bold text-emerald-900">
@@ -649,7 +650,7 @@ export default function SearchPageView() {
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                👑 Mentors
+                Mentors
               </button>
               <button
                 type="button"
@@ -660,7 +661,7 @@ export default function SearchPageView() {
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                🌱 Student Peers
+                Student Peers
               </button>
             </div>
 
@@ -712,7 +713,7 @@ export default function SearchPageView() {
                 onChange={(e) => setSortBy(e.target.value as "rating" | "reviews" | "sessions")}
                 className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 focus:border-blue-500 focus:outline-none"
               >
-                <option value="rating">Highest Rated (5.0 ★)</option>
+                <option value="rating">Highest Rated (5.0 Stars)</option>
                 <option value="reviews">Most Reviews</option>
                 <option value="sessions">Most Completed Sessions</option>
               </select>
@@ -749,7 +750,7 @@ export default function SearchPageView() {
               {query && <span className="rounded bg-blue-100 px-2 py-0.5">&quot;{query}&quot;</span>}
               {roleFilter !== "ALL" && (
                 <span className="rounded bg-blue-100 px-2 py-0.5 font-bold">
-                  {roleFilter === "MENTOR" ? "👑 Mentors Only" : "🌱 Student Peers Only"}
+                  {roleFilter === "MENTOR" ? "Mentors Only" : "Student Peers Only"}
                 </span>
               )}
               {selectedCategory !== "All Categories" && (
@@ -789,15 +790,13 @@ export default function SearchPageView() {
                     <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
                       {post.creatorRole === "STUDENT" ? (
                         <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 shadow-2xs">
-                          <span className="text-sm">🌱</span>
                           <span>Student Peer Ad</span>
                           <span className="text-emerald-300">•</span>
-                          <span className="font-semibold text-emerald-700">{post.badgeIcon || "🎓"} {post.badgeName || "Scholar"}</span>
+                          <span className="font-semibold text-emerald-700">{post.badgeName || "Scholar"}</span>
                           <span className="rounded-full bg-emerald-200/70 px-1.5 py-0.5 text-[10px] font-black text-emerald-950">+20 XP Exchange</span>
                         </div>
                       ) : (
                         <div className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-800 shadow-2xs">
-                          <span className="text-sm">👑</span>
                           <span>Industry Mentor</span>
                           <span className="text-blue-300">•</span>
                           <span className="font-semibold text-blue-700">{post.badgeName || "Verified Pro"}</span>
@@ -827,9 +826,7 @@ export default function SearchPageView() {
                         <div>
                           <div className="flex items-center gap-1.5">
                             <h3 className="text-base font-bold text-slate-900">{post.mentorName}</h3>
-                            {post.creatorRole === "STUDENT" ? (
-                              <span className="text-xs" title="Student Peer Learner">🎓</span>
-                            ) : (
+                            {post.creatorRole !== "STUDENT" && (
                               <svg className="size-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                               </svg>
@@ -842,7 +839,8 @@ export default function SearchPageView() {
                       {/* Rating & Sessions Stats */}
                       <div className="text-right">
                         <div className="flex items-center justify-end gap-1 text-xs font-bold text-amber-500">
-                          <span>★ {post.rating.toFixed(1)}</span>
+                          <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                          <span>{post.rating.toFixed(1)}</span>
                           <span className="text-slate-400 font-normal">({post.reviewCount})</span>
                         </div>
                         <p className="mt-0.5 text-[11px] text-slate-400">
@@ -892,7 +890,7 @@ export default function SearchPageView() {
                       <div>
                         {post.creatorRole === "STUDENT" ? (
                           <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800">
-                            <span>🎁 Free Peer Session (Earns XP & Badges)</span>
+                            <span>Free Peer Session (Earns XP & Badges)</span>
                           </span>
                         ) : (
                           <span
@@ -928,14 +926,14 @@ export default function SearchPageView() {
                           href="/mentor/dashboard"
                           className="flex h-10 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white transition hover:bg-blue-700"
                         >
-                          Manage Ad ⚙
+                          Manage Ad
                         </Link>
                       ) : user?.role === "MENTOR" ? (
                         <Link
                           href={`/messages`}
                           className="flex h-10 items-center justify-center rounded-xl bg-indigo-600 text-xs font-semibold text-white transition hover:bg-indigo-700"
                         >
-                          Peer Message 💬
+                          Peer Message
                         </Link>
                       ) : post.creatorRole === "STUDENT" ? (
                         <Link
@@ -1013,12 +1011,12 @@ export default function SearchPageView() {
                 }}
                 className="absolute right-4 top-4 rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
               >
-                ✕
+                <X className="size-5" />
               </button>
 
               <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-100 text-xl font-bold text-emerald-800">
-                  🌱
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800">
+                  <Users className="size-5 text-emerald-800" />
                 </div>
                 <div>
                   <h3 className="text-lg font-extrabold text-slate-900">Post Peer-to-Peer Ad</h3>
@@ -1033,23 +1031,25 @@ export default function SearchPageView() {
                 <div className="flex items-center justify-between">
                   <span className="font-bold">Your Status:</span>
                   <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 font-bold text-emerald-900">
-                    {getBadgeForXp(user?.xp || 0).icon} {getBadgeForXp(user?.xp || 0).name} ({user?.xp || 0} XP)
+                    {getBadgeForXp(user?.xp || 0).name} ({user?.xp || 0} XP)
                   </span>
                 </div>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-800">
-                  🎁 Peer-to-peer ads are 100% free community sessions. You cannot charge monetary fees, but every ad published boosts your reputation, earns <strong>+20 XP</strong>, and helps unlock higher scholar badges!
+                  Peer-to-peer ads are 100% free community sessions. You cannot charge monetary fees, but every ad published boosts your reputation, earns <strong>+20 XP</strong>, and helps unlock higher scholar badges!
                 </p>
               </div>
 
               {peerAdSuccess && (
-                <div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-100 p-3 text-xs font-bold text-emerald-900">
-                  ✓ {peerAdSuccess.message}
+                <div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-100 p-3 text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+                  <Check className="size-4 shrink-0" />
+                  <span>{peerAdSuccess.message}</span>
                 </div>
               )}
 
               {peerAdError && (
-                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-800">
-                  ⚠ {peerAdError}
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-800 flex items-center gap-1.5">
+                  <AlertTriangle className="size-4 shrink-0" />
+                  <span>{peerAdError}</span>
                 </div>
               )}
 
@@ -1151,7 +1151,7 @@ export default function SearchPageView() {
                     disabled={isSubmittingPeerAd}
                     className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:scale-[1.02] disabled:opacity-50"
                   >
-                    {isSubmittingPeerAd ? "Publishing..." : "Publish Peer Ad (+20 XP) 🚀"}
+                    {isSubmittingPeerAd ? "Publishing..." : "Publish Peer Ad (+20 XP)"}
                   </button>
                 </div>
               </form>

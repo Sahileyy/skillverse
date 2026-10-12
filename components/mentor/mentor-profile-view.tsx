@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
 import { calculateXpDiscount, getBadgeForXp } from "@/lib/badges";
+import { Star, Check, Clock, Video, Settings } from "@/components/ui/icons";
 
 export type MentorDetail = {
   id: string;
@@ -711,7 +712,7 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                   </h1>
                   {mentor.mentorLevel?.includes("Student Peer") ? (
                     <span className="rounded-full bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
-                      🌱 Student Peer Creator
+                      Student Peer Creator
                     </span>
                   ) : (
                     <svg className="size-5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
@@ -753,7 +754,7 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                   href="/mentor/dashboard"
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700"
                 >
-                  Manage in Studio ⚙
+                  Manage in Studio
                 </Link>
               ) : (
                 <>
@@ -781,7 +782,8 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
           <div className="mt-8 grid grid-cols-2 gap-3 border-t border-slate-100 pt-6 sm:grid-cols-4">
             <div className="rounded-xl bg-slate-50/70 p-3 text-center">
               <div className="flex items-center justify-center gap-1 text-base font-bold text-amber-500">
-                <span>★ {mentor.stats.rating.toFixed(1)}</span>
+                <Star className="size-4 fill-amber-400 text-amber-400 inline mr-0.5" />
+                <span>{mentor.stats.rating.toFixed(1)}</span>
               </div>
               <p className="mt-0.5 text-[11px] font-medium text-slate-500">
                 {mentor.stats.reviewCount} Verified Reviews
@@ -883,7 +885,8 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-700">
-                  <span>★ {mentor.stats.rating.toFixed(1)}</span>
+                  <Star className="size-4 fill-amber-400 text-amber-400 inline mr-0.5" />
+                  <span>{mentor.stats.rating.toFixed(1)}</span>
                   <span className="text-xs font-normal text-amber-600">({mentor.stats.reviewCount})</span>
                 </div>
               </div>
@@ -899,7 +902,7 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                       </div>
                       <div className="flex items-center gap-1 text-xs text-amber-500">
                         {Array.from({ length: rev.rating }).map((_, i) => (
-                          <span key={i}>★</span>
+                          <Star key={i} className="size-3.5 fill-amber-400 text-amber-400 inline" />
                         ))}
                       </div>
                     </div>
@@ -956,7 +959,10 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                       </span>
                     </div>
                     <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
-                      <span>⏱ {sess.duration}</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="size-3" />
+                        <span>{sess.duration}</span>
+                      </span>
                       <span>•</span>
                       <span className="font-medium text-blue-600">{sess.tag}</span>
                     </div>
@@ -1017,8 +1023,8 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
               {/* Booking Confirmation / Summary Box */}
               {bookingConfirmed ? (
                 <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center animate-fade-in">
-                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-emerald-600 text-white font-bold text-base shadow-xs">
-                    ✓
+                  <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xs">
+                    <Check className="size-5 text-white" />
                   </div>
                   <h3 className="mt-2 text-sm font-bold text-emerald-950">Mentorship Session Confirmed!</h3>
                   <p className="mt-1 text-xs text-emerald-800">
@@ -1029,7 +1035,8 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                   {confirmedBookingData?.meetingUrl && (
                     <div className="mt-3.5 rounded-xl border border-emerald-300 bg-white p-3 text-left shadow-2xs">
                       <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-900">
-                        <span>📹 Google Meet Link Ready:</span>
+                        <Video className="size-3.5" />
+                        <span>Google Meet Link Ready:</span>
                       </div>
                       <a
                         href={confirmedBookingData.meetingUrl}
@@ -1045,7 +1052,7 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                   {/* XP Discount Applied Callout */}
                   {confirmedBookingData?.discountApplied && (
                     <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900">
-                      ⚡ <strong>{confirmedBookingData.discountApplied.badgeName} Perk:</strong> Redeemed {confirmedBookingData.discountApplied.xpRedeemed} XP for a ₹{confirmedBookingData.discountApplied.discountAmount} discount! (Paid: ₹{confirmedBookingData.discountApplied.finalPrice})
+                      <strong>{confirmedBookingData.discountApplied.badgeName} Perk:</strong> Redeemed {confirmedBookingData.discountApplied.xpRedeemed} XP for a ₹{confirmedBookingData.discountApplied.discountAmount} discount! (Paid: ₹{confirmedBookingData.discountApplied.finalPrice})
                     </div>
                   )}
 
@@ -1070,8 +1077,8 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                 </div>
               ) : user && (user.id === mentorId || user.name === mentor.name) ? (
                 <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 text-center">
-                  <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-sm shadow-xs">
-                    ⚙
+                  <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                    <Settings className="size-5 text-white" />
                   </div>
                   <h3 className="mt-2 text-sm font-bold text-blue-900">This is Your Public Mentor Profile</h3>
                   <p className="mt-1 text-xs text-blue-700">
@@ -1099,7 +1106,7 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                         href="/messages"
                         className="mt-2 inline-flex h-8 w-full items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold text-white transition hover:bg-indigo-700"
                       >
-                        Send Peer Message 💬
+                        Send Peer Message
                       </Link>
                     </div>
                   )}
@@ -1109,7 +1116,6 @@ export default function MentorProfileView({ mentorId }: { mentorId: string }) {
                     <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-3.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-lg">{currentBadge.icon}</span>
                           <div>
                             <div className="flex items-center gap-1.5">
                               <span className="text-xs font-bold text-slate-900">{currentBadge.name}</span>

@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/auth-context";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { CATEGORY_OPTIONS } from "@/lib/validations/post";
 import { getBadgeForXp } from "@/lib/badges";
+import { GraduationCap, Sparkles, Users, Megaphone, Mail } from "@/components/ui/icons";
 
 export type MentorPostItem = {
   id: string;
@@ -246,8 +247,8 @@ export default function MentorDashboardView() {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-slate-50/50 px-5 py-16">
         <div className="max-w-md w-full rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xs">
-          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl text-blue-600 mb-4 font-bold">
-            🎓
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4 font-bold">
+            <GraduationCap className="size-8 text-blue-600" />
           </div>
           <h1 className="text-xl font-bold text-slate-900">Mentor Studio Login Required</h1>
           <p className="mt-2 text-xs leading-relaxed text-slate-600">
@@ -303,7 +304,7 @@ export default function MentorDashboardView() {
           <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 shadow-xs flex items-center justify-between animate-fade-in">
             <div className="flex items-center gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 font-black text-lg">
-                ⚡
+                <Sparkles className="size-5 text-slate-950" />
               </span>
               <div>
                 <p className="font-bold text-sm">+{xpCelebration} XP Earned!</p>
@@ -352,7 +353,7 @@ export default function MentorDashboardView() {
                   </h1>
                   {user?.role === "STUDENT" ? (
                     <span className="rounded-full bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
-                      🌱 Student Peer Creator
+                      Student Peer Creator
                     </span>
                   ) : (
                     <svg className="size-4 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
@@ -361,7 +362,7 @@ export default function MentorDashboardView() {
                   )}
                   {user?.role === "STUDENT" ? (
                     <span className="text-xs font-bold text-slate-600">
-                      • {getBadgeForXp(user.xp).icon} {getBadgeForXp(user.xp).name}
+                      • {getBadgeForXp(user.xp).name}
                     </span>
                   ) : (
                     user?.profile?.mentorLevel && (
@@ -375,7 +376,7 @@ export default function MentorDashboardView() {
                   {user?.profile?.headline || (user?.role === "STUDENT" ? "Student Peer Learner" : "Peer Mentor & Technical Advisor")} • {user?.email}
                 </p>
                 <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-500 font-medium">
-                  <span>⚡ {user?.xp || 0} XP</span>
+                  <span>{user?.xp || 0} XP</span>
                   <span className="text-slate-300">•</span>
                   <span className="text-emerald-600">Accepting peer inquiries</span>
                 </div>
@@ -398,7 +399,7 @@ export default function MentorDashboardView() {
                   className="rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3.5 py-2.5 text-xs font-bold text-blue-700 transition"
                   title="Enable paid mentorship and mentor accreditation"
                 >
-                  {isSwitchingRole ? "Activating..." : "👑 Upgrade to Mentor"}
+                  {isSwitchingRole ? "Activating..." : "Upgrade to Mentor"}
                 </button>
               )}
               <Link
@@ -414,15 +415,15 @@ export default function MentorDashboardView() {
           {user?.role === "STUDENT" && (
             <div className="mt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-emerald-200/90 bg-emerald-50/70 p-4 text-emerald-950">
               <div className="flex items-center gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-sm shadow-xs">
-                  🌱
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
+                  <Users className="size-4 text-white" />
                 </span>
                 <div>
                   <p className="text-xs sm:text-sm font-bold text-emerald-900">
                     Student Peer Creator Mode Active
                   </p>
                   <p className="text-[11px] sm:text-xs text-emerald-700">
-                    Your listings appear with the <strong>🌱 Student Peer</strong> badge in Search. All peer sessions are 100% free community exchanges that reward you with <strong>+20 XP</strong> and scholar badge progress!
+                    Your listings appear with the <strong>Student Peer</strong> badge in Search. All peer sessions are 100% free community exchanges that reward you with <strong>+20 XP</strong> and scholar badge progress!
                   </p>
                 </div>
               </div>
@@ -432,7 +433,7 @@ export default function MentorDashboardView() {
                 disabled={isSwitchingRole}
                 className="inline-flex shrink-0 items-center justify-center rounded-xl border border-blue-300 bg-white hover:bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-800 shadow-2xs transition"
               >
-                {isSwitchingRole ? "Activating..." : "👑 Want to offer paid sessions? Upgrade"}
+                {isSwitchingRole ? "Activating..." : "Want to offer paid sessions? Upgrade"}
               </button>
             </div>
           )}
@@ -675,7 +676,7 @@ export default function MentorDashboardView() {
                     ) : (
                       <div className="flex items-center pt-5">
                         <p className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
-                          ✓ Free sessions earn high peer reviews and boost your visibility in search!
+                          Free sessions earn high peer reviews and boost your visibility in search!
                         </p>
                       </div>
                     )}
@@ -714,7 +715,7 @@ export default function MentorDashboardView() {
                     {isSubmitting
                       ? "Publishing Ad..."
                       : user?.role === "STUDENT"
-                      ? "Publish Peer Ad (+20 XP) 🚀"
+                      ? "Publish Peer Ad (+20 XP)"
                       : "Publish Skill Ad (+15 XP)"}
                   </button>
                 </div>
@@ -736,11 +737,11 @@ export default function MentorDashboardView() {
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                     {user?.role === "STUDENT" ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
-                        🌱 Student Peer Ad • {getBadgeForXp(user.xp).icon} {getBadgeForXp(user.xp).name}
+                        Student Peer Ad • {getBadgeForXp(user.xp).name}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-800">
-                        👑 Industry Mentor • Verified
+                        Industry Mentor • Verified
                       </span>
                     )}
                     <span className="text-[10px] font-semibold text-slate-400 uppercase">Preview</span>
@@ -760,9 +761,7 @@ export default function MentorDashboardView() {
                       <div>
                         <div className="flex items-center gap-1.5">
                           <h4 className="text-sm font-bold text-slate-900">{user?.name || "Your Name"}</h4>
-                          {user?.role === "STUDENT" ? (
-                            <span className="text-xs" title="Student Peer Learner">🎓</span>
-                          ) : (
+                          {user?.role !== "STUDENT" && (
                             <svg className="size-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Verified Mentor">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             </svg>
@@ -851,8 +850,8 @@ export default function MentorDashboardView() {
               </div>
             ) : postList.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-                <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl text-blue-600 mb-3">
-                  📢
+                <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-3">
+                  <Megaphone className="size-6 text-blue-600" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900">No Skill Ads Published Yet</h3>
                 <p className="mt-1 max-w-md mx-auto text-xs text-slate-500">
@@ -879,11 +878,11 @@ export default function MentorDashboardView() {
                         <div className="flex items-center gap-2 flex-wrap">
                           {user?.role === "STUDENT" ? (
                             <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
-                              🌱 Peer Ad
+                              Peer Ad
                             </span>
                           ) : (
                             <span className="rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-blue-700">
-                              👑 Mentor Ad
+                              Mentor Ad
                             </span>
                           )}
                           <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-800">
@@ -901,7 +900,7 @@ export default function MentorDashboardView() {
                               : "bg-amber-100 text-amber-800 border border-amber-300"
                           }`}
                         >
-                          ● {post.status}
+                          {post.status}
                         </span>
                       </div>
 
@@ -986,7 +985,7 @@ export default function MentorDashboardView() {
 
             {totalBookings === 0 ? (
               <div className="mt-8 text-center py-10">
-                <span className="text-3xl">📬</span>
+                <Mail className="size-8 text-slate-400 mx-auto" />
                 <p className="mt-2 text-sm font-bold text-slate-800">No session requests yet</p>
                 <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
                   As students search for skills and discover your ads, their session requests and 1-on-1 bookings will appear here.

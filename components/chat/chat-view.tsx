@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
+import { X } from "@/components/ui/icons";
 
 export type Message = {
   id: string;
@@ -349,7 +350,10 @@ export default function ChatView() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-sm font-bold text-slate-900">{activeConv.user.name}</h2>
-                    <span className="text-[11px] text-emerald-600 font-semibold">● Online</span>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-semibold">
+                      <span className="size-1.5 rounded-full bg-emerald-500" />
+                      Online
+                    </span>
                   </div>
                   <p className="text-[11px] text-slate-500 truncate max-w-xs sm:max-w-sm">
                     {activeConv.user.headline}
@@ -464,7 +468,7 @@ export default function ChatView() {
                 onClick={() => setIsScheduleModalOpen(false)}
                 className="rounded-full p-1 text-slate-400 hover:bg-slate-100"
               >
-                ✕
+                <X className="size-4" />
               </button>
             </div>
 

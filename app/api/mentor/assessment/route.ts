@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       description: levelDescription,
       role: targetRole,
       xpAwarded,
-      message: `Your AI Mentor level has been evaluated and officially set to "${decidedLevel}" (Rating: ${mentorRating}★)!`,
+      message: `Your AI Mentor level has been evaluated and officially set to "${decidedLevel}" (Rating: ${mentorRating} Stars)!`,
     });
 
     // Re-issue JWT cookie if role updated so client session updates immediately

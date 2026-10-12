@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
 import OrganicSphereLoader from "@/components/home/organic-sphere-loader";
 import { TangleFooter } from "@/components/ui/tangle-footer";
+import { Shield, Star, ArrowRight, Target, Compass, Check, Sparkles } from "@/components/ui/icons";
+import { DarkGradientBg } from "@/components/ui/elegant-dark-pattern";
+
 
 // Sample Curated Data for the UI Sections
 const TRENDING_SKILLS = [
@@ -154,7 +157,7 @@ const RECENT_REVIEWS = [
 export default function HomeSections() {
   const router = useRouter();
   const openLoginModal = useLoginModal();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -162,6 +165,13 @@ export default function HomeSections() {
   // Mobile "View More" toggle states
   const [showAllMentorsMobile, setShowAllMentorsMobile] = useState(false);
   const [showAllProjectsMobile, setShowAllProjectsMobile] = useState(false);
+
+  // When admin is logged in, redirect them directly to the admin command center so they don't see the consumer home dashboard
+  useEffect(() => {
+    if (!isLoading && user?.role === "ADMIN") {
+      router.replace("/admin");
+    }
+  }, [user, isLoading, router]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,6 +185,27 @@ export default function HomeSections() {
   const handleSkillClick = (skill: string) => {
     router.push(`/search?q=${encodeURIComponent(skill)}`);
   };
+
+  if (!isLoading && user?.role === "ADMIN") {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-slate-50/50 px-4 py-20 text-center font-sans">
+        <div className="size-14 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 mb-4 ring-4 ring-purple-100 shadow-xs">
+          <Shield className="size-7 text-purple-600" />
+        </div>
+        <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Admin Session Active</h2>
+        <p className="mt-2 text-xs text-slate-500 max-w-sm">
+          Redirecting to the SkillVerse Admin Command Center to manage users and platform moderation...
+        </p>
+        <Link
+          href="/admin"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition"
+        >
+          <span>Open Admin Command Center</span>
+          <span>→</span>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -249,7 +280,7 @@ export default function HomeSections() {
             {/* Mentor Studio shortcut for logged in Mentors */}
             {user?.role === "MENTOR" && (
               <div className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2 text-xs font-semibold text-blue-800 shadow-2xs">
-                <span>👋 Welcome, Mentor {user.name.split(" ")[0]}!</span>
+                <span>Welcome, Mentor {user.name.split(" ")[0]}!</span>
                 <Link
                   href="/mentor/dashboard"
                   className="rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-bold text-white transition hover:bg-blue-700"
@@ -286,7 +317,7 @@ export default function HomeSections() {
               <p className="text-[10px] sm:text-xs font-medium text-slate-500">Sessions Completed</p>
             </div>
             <div className="text-center rounded-lg bg-white/50 p-2 sm:bg-transparent sm:p-0">
-              <p className="text-lg sm:text-2xl font-bold text-slate-900">4.9 ★</p>
+              <p className="text-lg sm:text-2xl font-bold text-slate-900">4.9 / 5.0</p>
               <p className="text-[10px] sm:text-xs font-medium text-slate-500">Verified Rating</p>
             </div>
             <div className="text-center rounded-lg bg-white/50 p-2 sm:bg-transparent sm:p-0">
@@ -316,11 +347,10 @@ export default function HomeSections() {
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`rounded-lg px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold transition-all ${
-                  selectedCategory === cat
-                    ? "bg-slate-900 text-white shadow-xs"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
+                className={`rounded-lg px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold transition-all ${selectedCategory === cat
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
               >
                 {cat}
               </button>
@@ -333,9 +363,8 @@ export default function HomeSections() {
           {FEATURED_MENTORS.map((mentor, index) => (
             <div
               key={mentor.id}
-              className={`group flex flex-col justify-between rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-lg ${
-                index >= 2 && !showAllMentorsMobile ? "hidden sm:flex" : "flex"
-              }`}
+              className={`group flex flex-col justify-between rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-lg ${index >= 2 && !showAllMentorsMobile ? "hidden sm:flex" : "flex"
+                }`}
             >
               <div>
                 {/* Header: Avatar, Name, Verified Rating */}
@@ -351,7 +380,8 @@ export default function HomeSections() {
                   <div>
                     <h3 className="text-sm sm:text-base font-bold text-slate-900">{mentor.name}</h3>
                     <div className="flex items-center gap-1 text-[11px] sm:text-xs text-amber-500 font-semibold">
-                      <span>★ {mentor.rating}</span>
+                      <Star className="size-3.5 fill-amber-400 text-amber-400 inline" />
+                      <span>{mentor.rating}</span>
                       <span className="text-slate-400 font-normal">({mentor.reviewCount})</span>
                     </div>
                   </div>
@@ -384,11 +414,10 @@ export default function HomeSections() {
               <div className="mt-4 sm:mt-6 border-t border-slate-100 pt-3 sm:pt-4">
                 <div className="flex items-center justify-between text-[11px] sm:text-xs">
                   <span
-                    className={`font-semibold rounded px-1.5 sm:px-2 py-0.5 ${
-                      mentor.priceType === "FREE"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-blue-50 text-blue-700"
-                    }`}
+                    className={`font-semibold rounded px-1.5 sm:px-2 py-0.5 ${mentor.priceType === "FREE"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-blue-50 text-blue-700"
+                      }`}
                   >
                     {mentor.priceType === "FREE" ? "Free 1:1 Session" : `${mentor.priceAmount} / session`}
                   </span>
@@ -528,9 +557,8 @@ export default function HomeSections() {
           {COMMUNITY_PROJECTS.map((proj, index) => (
             <div
               key={proj.id}
-              className={`flex flex-col justify-between rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xs transition-all hover:border-slate-300 ${
-                index >= 2 && !showAllProjectsMobile ? "hidden md:flex" : "flex"
-              }`}
+              className={`flex flex-col justify-between rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xs transition-all hover:border-slate-300 ${index >= 2 && !showAllProjectsMobile ? "hidden md:flex" : "flex"
+                }`}
             >
               <div>
                 <div className="flex items-center justify-between">
@@ -615,174 +643,176 @@ export default function HomeSections() {
         </div>
       </section>
 
-      {/* 5. SKILL VERIFICATION & CAREER ROADMAP */}
-      <section id="ai-tools" className="border-t border-slate-200/90 bg-[#f8fafc] px-4 py-12 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 border border-slate-200 px-3.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs mb-3">
-              <span className="size-1.5 rounded-full bg-blue-600" />
-              <span>Skill Verification & Career Pathways</span>
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-              Benchmark Your Skills. Accelerate Your Career.
-            </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Validate technical depth through adaptive diagnostic assessments or generate milestone-driven progression roadmaps tailored to your career goals.
-            </p>
-          </div>
-
-          <div className="mt-8 sm:mt-12 grid gap-6 sm:gap-8 md:grid-cols-2 max-w-4xl mx-auto">
-            {/* Tool 1: AI Skill Assessment */}
-            <div className="group flex flex-col justify-between rounded-[32px] border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_12px_36px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(37,99,235,0.12)] hover:border-blue-300">
-              <div>
-                {/* Top Row: AI Icon + Feature Badge */}
-                <div className="flex items-center justify-between">
-                  <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white shadow-md shadow-blue-500/25 transition-transform duration-300 group-hover:scale-105">
-                    <svg className="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200/80 px-3.5 py-1 text-xs font-bold text-blue-700 shadow-2xs">
-                    <span className="inline-block size-1.5 rounded-full bg-blue-500 animate-pulse" />
-                    Adaptive Evaluation • +10 XP
-                  </span>
-                </div>
-
-                {/* Metadata & Title */}
-                <div className="mt-5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] sm:text-sm font-bold text-blue-600">
-                      Technical Competency Quiz
-                    </span>
-                    <span className="text-xs font-medium text-slate-400">
-                      • 5 Adaptive Questions
-                    </span>
-                  </div>
-
-                  <h3 className="mt-1.5 text-lg sm:text-[22px] font-extrabold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
-                    Skill Assessment & Verification
-                  </h3>
-                  <p className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-slate-600">
-                    Assess your engineering depth across <strong>Simple</strong>, <strong>Medium</strong>, and <strong>Hard</strong> tiers. Score 60%+ to earn an official verified badge visible to peers and mentors.
-                  </p>
-
-                  {/* Pill Tags */}
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <span className="rounded-xl bg-blue-50/90 border border-blue-200/70 px-3 py-1.5 text-xs font-semibold text-blue-800">
-                      3 Difficulty Tiers
-                    </span>
-                    <span className="rounded-xl bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700">
-                      Objective Scoring
-                    </span>
-                    <span className="rounded-xl bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 text-xs font-semibold text-emerald-800">
-                      Verified Skill Badge
-                    </span>
-                  </div>
-                </div>
+      {/* 5. SKILL VERIFICATION & CAREER ROADMAP (BENCHMARK YOUR SKILLS) */}
+      <section id="ai-tools" className="scroll-mt-24 sm:scroll-mt-28 border-t border-slate-200/90 bg-[#f8fafc] px-3 sm:px-6 lg:px-8 py-12 sm:py-20">
+        <div className="mx-auto max-w-7xl">
+          <DarkGradientBg className="rounded-[32px] sm:rounded-[44px] border border-white/10 shadow-2xl">
+            <div className="relative z-10 px-5 pt-16 pb-16 sm:px-10 sm:pt-20 sm:pb-20 md:px-16 text-center">
+              {/* Eyebrow */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-white text-xs sm:text-sm font-semibold tracking-wider uppercase mb-5 shadow-sm">
+                <Sparkles className="size-3.5 text-cyan-400" />
+                <span>AI SKILL TEST & CAREER ROADMAP</span>
               </div>
 
-              {/* Bottom Row */}
-              <div className="mt-6">
-                <div className="border-t border-slate-100 pt-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-base sm:text-[17px] font-black text-slate-900">
-                        5 Mins Quiz
+              {/* Main Headline */}
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white uppercase leading-[1.12]">
+                READY TO SCALE YOUR <br className="hidden sm:inline" />
+                <span className="inline-block pr-2 italic font-serif sm:font-sans bg-gradient-to-r from-cyan-400 via-sky-300 to-cyan-100 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(6,182,212,0.35)]">
+                  SKILLS
+                </span>
+              </h2>
+
+              {/* Subtitle - High Visibility */}
+              <p className="mx-auto mt-5 max-w-2xl text-sm sm:text-base md:text-lg text-slate-200 leading-relaxed font-normal">
+                Take the diagnostic skill test to benchmark your abilities, or generate your custom step-by-step career roadmap.
+              </p>
+
+              {/* Two Minimal Pathway Cards */}
+              <div className="mt-10 sm:mt-14 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto text-left">
+                {/* Option 1: AI Skill Assessment Test */}
+                <Link
+                  href="/assessment"
+                  className="group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/30 p-6 sm:p-8 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 shadow-lg"
+                >
+                  <div>
+                    {/* Header: Label / Index */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono uppercase tracking-widest text-slate-300 font-semibold">
+                        01 // Diagnostic Test
+                      </span>
+                      <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                        +10 XP
+                      </span>
+                    </div>
+
+                    {/* Icon + Title */}
+                    <div className="mt-5 flex items-center gap-3.5">
+                      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white transition-colors group-hover:border-white/40 group-hover:bg-white/20">
+                        <Target className="size-6 text-white" />
                       </div>
-                      <div className="text-xs text-slate-500 mt-0.5">
-                        Instant Verification & XP
+                      <div>
+                        <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                          AI Skill Assessment Test
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-300 font-medium">
+                          5-Minute Adaptive Benchmark Test
+                        </p>
                       </div>
                     </div>
 
-                    <Link
-                      href="/assessment"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-blue-600 px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-bold text-white transition-all duration-200 active:scale-[0.98] shadow-sm hover:shadow-md"
-                    >
-                      <span>Start Assessment</span>
-                      <span className="transition-transform group-hover:translate-x-0.5">→</span>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+                    {/* Description */}
+                    <p className="mt-4 text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                      Evaluate your real engineering abilities with 5 dynamic, adaptive test questions calibrated to industry expectations.
+                    </p>
 
-            {/* Tool 2: AI Career Guidance */}
-            <div className="group flex flex-col justify-between rounded-[32px] border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_12px_36px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(99,102,241,0.12)] hover:border-indigo-300">
-              <div>
-                {/* Top Row: Compass Icon + Feature Badge */}
-                <div className="flex items-center justify-between">
-                  <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white shadow-md shadow-indigo-500/25 transition-transform duration-300 group-hover:scale-105">
-                    <svg className="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 8.25l-2.25 6.75-6.75 2.25 2.25-6.75 6.75-2.25z" />
-                    </svg>
+                    {/* Feature List */}
+                    <ul className="mt-5 space-y-2.5 text-xs sm:text-sm text-slate-200">
+                      <li className="flex items-center gap-2.5">
+                        <Check className="size-4 text-emerald-400 shrink-0" />
+                        <span>5 Adaptive Diagnostic Questions</span>
+                      </li>
+                      <li className="flex items-center gap-2.5">
+                        <Check className="size-4 text-emerald-400 shrink-0" />
+                        <span>Precision Radar & Instant Skill Gap Analysis</span>
+                      </li>
+                      <li className="flex items-center gap-2.5">
+                        <Check className="size-4 text-emerald-400 shrink-0" />
+                        <span>Official Verified Skill Badge on Completion</span>
+                      </li>
+                    </ul>
                   </div>
 
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 px-3.5 py-1 text-xs font-bold text-indigo-700 shadow-2xs">
-                    <span className="inline-block size-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                    Career Trajectory • +5 XP
-                  </span>
-                </div>
-
-                {/* Metadata & Title */}
-                <div className="mt-5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] sm:text-sm font-bold text-indigo-600">
-                      Career Pathway
-                    </span>
-                    <span className="text-xs font-medium text-slate-400">
-                      • 5 Milestone Stages
-                    </span>
+                  {/* Clean Minimal Button */}
+                  <div className="mt-8 pt-5 border-t border-white/15">
+                    <div className="flex items-center justify-between rounded-xl bg-white text-slate-950 px-5 py-3.5 text-xs sm:text-sm font-bold tracking-wide uppercase transition-all group-hover:bg-slate-100 shadow-md">
+                      <span>Take Skill Test</span>
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                    </div>
                   </div>
+                </Link>
 
-                  <h3 className="mt-1.5 text-lg sm:text-[22px] font-extrabold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
-                    Career Pathway & Growth Roadmap
-                  </h3>
-                  <p className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-slate-600">
-                    Calibrated directly from your quiz score. Identifies high-impact skill gaps, generates custom milestone stages, and connects you with verified mentors.
-                  </p>
+                {/* Option 2: AI Career Roadmap */}
+                <Link
+                  href="/roadmap"
+                  className="group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/30 p-6 sm:p-8 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 shadow-lg"
+                >
+                  <div>
+                    {/* Header: Label / Index */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono uppercase tracking-widest text-slate-300 font-semibold">
+                        02 // Career Roadmap
+                      </span>
+                      <span className="text-xs font-mono text-cyan-400 font-bold bg-cyan-950/40 border border-cyan-500/30 px-2 py-0.5 rounded-md">
+                        +5 XP
+                      </span>
+                    </div>
 
-                  {/* Pill Tags */}
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <span className="rounded-xl bg-indigo-50/90 border border-indigo-200/70 px-3 py-1.5 text-xs font-semibold text-indigo-800">
-                      Skill Gap Diagnostics
-                    </span>
-                    <span className="rounded-xl bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700">
-                      Structured Waypoints
-                    </span>
-                    <span className="rounded-xl bg-purple-50 border border-purple-200/80 px-3 py-1.5 text-xs font-semibold text-purple-800">
-                      Mentor Pairing
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Row */}
-              <div className="mt-6">
-                <div className="border-t border-slate-100 pt-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-base sm:text-[17px] font-black text-slate-900">
-                        Active Roadmap
+                    {/* Icon + Title */}
+                    <div className="mt-5 flex items-center gap-3.5">
+                      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white transition-colors group-hover:border-white/40 group-hover:bg-white/20">
+                        <Compass className="size-6 text-white" />
                       </div>
-                      <div className="text-xs text-slate-500 mt-0.5">
-                        Calibrated from Quiz Score
+                      <div>
+                        <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                          AI Career Roadmap
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-300 font-medium">
+                          Waypoints, Milestones & Mentors
+                        </p>
                       </div>
                     </div>
 
-                    <Link
-                      href="/roadmap"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-indigo-600 px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-bold text-white transition-all duration-200 active:scale-[0.98] shadow-sm hover:shadow-md"
-                    >
-                      <span>Explore Roadmap</span>
-                      <span className="transition-transform group-hover:translate-x-0.5">→</span>
-                    </Link>
+                    {/* Description */}
+                    <p className="mt-4 text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                      Generate an end-to-end, customized roadmap tailored to your target tech role, complete with curated resources and mentor pairing.
+                    </p>
+
+                    {/* Feature List */}
+                    <ul className="mt-5 space-y-2.5 text-xs sm:text-sm text-slate-200">
+                      <li className="flex items-center gap-2.5">
+                        <Check className="size-4 text-cyan-400 shrink-0" />
+                        <span>Step-by-Step Milestone Waypoints</span>
+                      </li>
+                      <li className="flex items-center gap-2.5">
+                        <Check className="size-4 text-cyan-400 shrink-0" />
+                        <span>Curated High-Value Resources & Projects</span>
+                      </li>
+                      <li className="flex items-center gap-2.5">
+                        <Check className="size-4 text-cyan-400 shrink-0" />
+                        <span>Direct Pairing with Senior Mentors</span>
+                      </li>
+                    </ul>
                   </div>
+
+                  {/* Clean Minimal Button */}
+                  <div className="mt-8 pt-5 border-t border-white/15">
+                    <div className="flex items-center justify-between rounded-xl bg-white text-slate-950 px-5 py-3.5 text-xs sm:text-sm font-bold tracking-wide uppercase transition-all group-hover:bg-slate-100 shadow-md">
+                      <span>Generate Roadmap</span>
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Minimal Trust & Guarantee indicators below */}
+              <div className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs sm:text-sm text-slate-300 font-medium">
+                <div className="flex items-center gap-2">
+                  <Shield className="size-4 text-slate-300" />
+                  <span>100% Free & Open to All Learners</span>
+                </div>
+                <span className="hidden sm:inline text-slate-600">•</span>
+                <div className="flex items-center gap-2">
+                  <Star className="size-4 text-amber-400 fill-amber-400" />
+                  <span>Calibrated by Top Tech Mentors</span>
+                </div>
+                <span className="hidden sm:inline text-slate-600">•</span>
+                <div className="flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Real-Time AI Personalization</span>
                 </div>
               </div>
             </div>
-          </div>
+          </DarkGradientBg>
         </div>
       </section>
 
@@ -826,7 +856,7 @@ export default function HomeSections() {
                 <div>
                   <div className="flex items-center gap-1 text-amber-500">
                     {Array.from({ length: rev.rating }).map((_, i) => (
-                      <span key={i} className="text-xs sm:text-sm">★</span>
+                      <Star key={i} className="size-3.5 fill-amber-400 text-amber-400 inline" />
                     ))}
                   </div>
 

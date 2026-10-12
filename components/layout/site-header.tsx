@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
@@ -19,6 +20,9 @@ function getLevelInfo(xp: number = 0) {
 }
 
 export default function SiteHeader() {
+  const pathname = usePathname();
+  const isAdminPage = pathname?.startsWith("/admin") ?? false;
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -60,7 +64,7 @@ export default function SiteHeader() {
         {/* Brand & Left Navigation */}
         <div className="flex items-center gap-8 lg:gap-10">
           <Link
-            href="/"
+            href={user?.role === "ADMIN" ? "/admin" : "/"}
             className="group flex items-center gap-2.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-900"
           >
             {/* Custom Geometric Logo Badge */}
@@ -76,14 +80,24 @@ export default function SiteHeader() {
                 SkillVerse
               </span>
               <span className="text-[10px] font-medium tracking-wide uppercase text-slate-400 hidden sm:block -mt-1">
-                Peer Network
+                {isAdminPage ? "Admin Portal" : "Peer Network"}
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation Links */}
           <nav aria-label="Primary navigation" className="hidden items-center gap-6 lg:flex">
-            {user?.role === "MENTOR" ? (
+            {isAdminPage ? (
+              user?.role === "ADMIN" ? (
+                <Link
+                  className="inline-flex items-center gap-1.5 text-[13px] font-bold text-purple-600 transition-colors hover:text-purple-800"
+                  href="/admin"
+                >
+                  <span className="size-1.5 rounded-full bg-purple-600" />
+                  <span>Admin Dashboard</span>
+                </Link>
+              ) : null
+            ) : user?.role === "MENTOR" ? (
               <>
                 <Link
                   className="inline-flex items-center gap-1.5 text-[13px] font-bold text-blue-600 transition-colors hover:text-blue-800"
@@ -170,15 +184,17 @@ export default function SiteHeader() {
               )}
 
               {/* Messages Shortcut */}
-              <Link
-                href="/messages"
-                className="relative inline-flex size-9 sm:size-10 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 shadow-2xs"
-                title="Messages"
-              >
-                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-.84-.84c.15-.904.53-1.848.966-2.613A7.95 7.95 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                </svg>
-              </Link>
+              {user.role !== "ADMIN" && (
+                <Link
+                  href="/messages"
+                  className="relative inline-flex size-9 sm:size-10 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 shadow-2xs"
+                  title="Messages"
+                >
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-.84-.84c.15-.904.53-1.848.966-2.613A7.95 7.95 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                  </svg>
+                </Link>
+              )}
 
               {/* Profile Dropdown Trigger */}
               <div className="relative" ref={profileDropdownRef}>
@@ -256,19 +272,27 @@ export default function SiteHeader() {
                         </div>
                       </div>
 
-                      {/* XP / Level Progress Bar */}
-                      <div className="mt-3 pt-2.5 border-t border-slate-200/60">
-                        <div className="flex items-center justify-between text-[11px] font-bold">
-                          <span className="text-slate-700">Level {levelInfo.level}</span>
-                          <span className="text-indigo-600">{levelInfo.xp} XP</span>
+                      {/* XP / Level Progress Bar (Hidden for Admin) */}
+                      {user.role !== "ADMIN" ? (
+                        <div className="mt-3 pt-2.5 border-t border-slate-200/60">
+                          <div className="flex items-center justify-between text-[11px] font-bold">
+                            <span className="text-slate-700">Level {levelInfo.level}</span>
+                            <span className="text-indigo-600">{levelInfo.xp} XP</span>
+                          </div>
+                          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300"
+                              style={{ width: `${Math.max(8, levelInfo.progress)}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300"
-                            style={{ width: `${Math.max(8, levelInfo.progress)}%` }}
-                          />
+                      ) : (
+                        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700 border border-purple-200">
+                            Administrator
+                          </span>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Navigation Menu Items */}
@@ -284,16 +308,18 @@ export default function SiteHeader() {
                         <span>View Profile</span>
                       </Link>
 
-                      <Link
-                        href="/messages"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-950 transition-colors"
-                      >
-                        <svg className="size-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-.84-.84c.15-.904.53-1.848.966-2.613A7.95 7.95 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                        </svg>
-                        <span>Direct Messages</span>
-                      </Link>
+                      {user.role !== "ADMIN" && (
+                        <Link
+                          href="/messages"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-950 transition-colors"
+                        >
+                          <svg className="size-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-.84-.84c.15-.904.53-1.848.966-2.613A7.95 7.95 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                          </svg>
+                          <span>Direct Messages</span>
+                        </Link>
+                      )}
 
                       {user.role === "ADMIN" ? (
                         <>
@@ -396,7 +422,7 @@ export default function SiteHeader() {
               <div className="h-9 w-20 rounded-xl bg-slate-100 animate-pulse" />
               <div className="size-9 rounded-full bg-slate-100 animate-pulse" />
             </div>
-          ) : (
+          ) : !isAdminPage ? (
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 type="button"
@@ -413,24 +439,26 @@ export default function SiteHeader() {
                 Get Started
               </button>
             </div>
-          )}
+          ) : null}
 
           {/* Mobile Menu Toggle Button */}
-          <button
-            aria-controls="mobile-navigation"
-            aria-expanded={isMenuOpen}
-            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-            className="inline-flex size-9 sm:size-10 items-center justify-center rounded-xl border border-slate-200/90 text-slate-700 transition-colors hover:bg-slate-50 lg:hidden"
-            onClick={() => setIsMenuOpen((open) => !open)}
-            title={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-            type="button"
-          >
-            <span aria-hidden="true" className="relative block size-4 sm:size-5">
-              <span className={`absolute left-0 block h-0.5 w-full bg-current transition-transform duration-200 ${isMenuOpen ? "top-2 rotate-45" : "top-0.5"}`} />
-              <span className={`absolute left-0 top-2 block h-0.5 w-full bg-current transition-opacity duration-200 ${isMenuOpen ? "opacity-0" : "opacity-100"}`} />
-              <span className={`absolute left-0 block h-0.5 w-full bg-current transition-transform duration-200 ${isMenuOpen ? "top-2 -rotate-45" : "top-3.5"}`} />
-            </span>
-          </button>
+          {(!isAdminPage || user) && (
+            <button
+              aria-controls="mobile-navigation"
+              aria-expanded={isMenuOpen}
+              aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              className="inline-flex size-9 sm:size-10 items-center justify-center rounded-xl border border-slate-200/90 text-slate-700 transition-colors hover:bg-slate-50 lg:hidden"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              title={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              type="button"
+            >
+              <span aria-hidden="true" className="relative block size-4 sm:size-5">
+                <span className={`absolute left-0 block h-0.5 w-full bg-current transition-transform duration-200 ${isMenuOpen ? "top-2 rotate-45" : "top-0.5"}`} />
+                <span className={`absolute left-0 top-2 block h-0.5 w-full bg-current transition-opacity duration-200 ${isMenuOpen ? "opacity-0" : "opacity-100"}`} />
+                <span className={`absolute left-0 block h-0.5 w-full bg-current transition-transform duration-200 ${isMenuOpen ? "top-2 -rotate-45" : "top-3.5"}`} />
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -459,12 +487,20 @@ export default function SiteHeader() {
                   <p className="font-bold text-sm text-slate-900 truncate">{user.name}</p>
                   <p className="text-xs text-slate-500 truncate">{user.email}</p>
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200/60">
-                      {user.role === "MENTOR" ? "Mentor" : "Member"}
-                    </span>
-                    <span className="text-[11px] font-bold text-indigo-600">
-                      Level {levelInfo.level} • {levelInfo.xp} XP
-                    </span>
+                    {user.role === "ADMIN" ? (
+                      <span className="rounded bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700 border border-purple-200">
+                        Administrator
+                      </span>
+                    ) : (
+                      <>
+                        <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200/60">
+                          {user.role === "MENTOR" ? "Mentor" : "Member"}
+                        </span>
+                        <span className="text-[11px] font-bold text-indigo-600">
+                          Level {levelInfo.level} • {levelInfo.xp} XP
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -480,7 +516,7 @@ export default function SiteHeader() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <span>Mentor Studio</span>
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">★ Dashboard</span>
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">Dashboard</span>
                 </Link>
                 <Link
                   className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
@@ -505,6 +541,17 @@ export default function SiteHeader() {
                   Messages
                 </Link>
               </>
+            ) : isAdminPage ? (
+              user?.role === "ADMIN" ? (
+                <Link
+                  className="rounded-xl px-3 py-2.5 text-sm font-bold text-purple-600 hover:bg-purple-50 flex items-center justify-between transition-colors"
+                  href="/admin"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span>Admin Dashboard</span>
+                  <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700">Admin</span>
+                </Link>
+              ) : null
             ) : user?.role === "ADMIN" ? (
               <>
                 <Link
@@ -513,7 +560,7 @@ export default function SiteHeader() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <span>Admin Dashboard</span>
-                  <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700">★ Admin</span>
+                  <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700">Admin</span>
                 </Link>
               </>
             ) : (
@@ -559,13 +606,15 @@ export default function SiteHeader() {
                 >
                   My Profile
                 </Link>
-                <Link
-                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
-                  href="/messages"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Messages
-                </Link>
+                {user.role !== "ADMIN" && (
+                  <Link
+                    className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                    href="/messages"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Messages
+                  </Link>
+                )}
               </>
             )}
           </nav>

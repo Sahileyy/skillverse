@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { useAuth } from "@/components/auth/auth-context";
+import { X, Check } from "@/components/ui/icons";
 
 export type CommunityProject = {
   id: string;
@@ -537,14 +538,14 @@ export default function CommunityProjectsView() {
                 onClick={() => setSelectedProjectForJoin(null)}
                 className="rounded-full p-1 text-slate-400 hover:bg-slate-100"
               >
-                ✕
+                <X className="size-4" />
               </button>
             </div>
 
             {joinRequestSent ? (
               <div className="py-8 text-center">
                 <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-lg">
-                  ✓
+                  <Check className="size-6 text-emerald-700" />
                 </div>
                 <h3 className="mt-4 text-base font-bold text-slate-900">Join Request Submitted!</h3>
                 <p className="mx-auto mt-2 max-w-sm text-xs text-slate-600 leading-relaxed">
@@ -637,7 +638,7 @@ export default function CommunityProjectsView() {
                 onClick={() => setIsCreatingProject(false)}
                 className="rounded-full p-1 text-slate-400 hover:bg-slate-100"
               >
-                ✕
+                <X className="size-4" />
               </button>
             </div>
 

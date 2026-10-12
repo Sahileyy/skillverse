@@ -30,7 +30,7 @@ export type AuthUser = {
 type AuthContextType = {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
   register: (name: string, email: string, password: string, role: "STUDENT" | "MENTOR") => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: data.error || "Login failed" };
       }
       setUser(data.user);
-      return { success: true };
+      return { success: true, user: data.user };
     } catch {
       return { success: false, error: "Network error. Please try again." };
     }

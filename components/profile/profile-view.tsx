@@ -7,6 +7,7 @@ import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { ProfileUpdateInput } from "@/lib/validations/profile";
 import { getBadgeForXp, getNextBadge, BADGE_TIERS } from "@/lib/badges";
 import type { GroqSkillValidation } from "@/lib/groq";
+import { Sparkles, Award, Megaphone, Zap } from "@/components/ui/icons";
 
 type ProfileEditFormProps = {
   user: AuthUser;
@@ -420,11 +421,13 @@ export default function ProfileView() {
             <span className="text-slate-900 font-semibold">User Profile</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
-              ⚡ {user.xp || 0} XP
-            </span>
-          </div>
+          {role !== "ADMIN" && (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
+                {user.xp || 0} XP
+              </span>
+            </div>
+          )}
         </div>
 
         {/* XP Award Celebration Alert */}
@@ -432,7 +435,7 @@ export default function ProfileView() {
           <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 shadow-xs flex items-center justify-between animate-fade-in">
             <div className="flex items-center gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 font-black text-lg">
-                ⚡
+                <Sparkles className="size-5 text-slate-950" />
               </span>
               <div>
                 <p className="font-bold text-sm">+{xpCelebration} XP Earned!</p>
@@ -517,17 +520,21 @@ export default function ProfileView() {
           <div className="pt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-slate-900">Profile Status:</span>
-              <span className={`inline-flex items-center gap-1 font-semibold ${isProfileComplete ? "text-emerald-600" : "text-amber-600"}`}>
-                <span className={`size-2 rounded-full ${isProfileComplete ? "bg-emerald-500" : "bg-amber-500"}`} />
-                {isProfileComplete ? "Complete (+20 XP Earned)" : "Incomplete (Fill all fields for +20 XP)"}
+              <span className={`inline-flex items-center gap-1 font-semibold ${role === "ADMIN" ? "text-purple-700" : isProfileComplete ? "text-emerald-600" : "text-amber-600"}`}>
+                <span className={`size-2 rounded-full ${role === "ADMIN" ? "bg-purple-600" : isProfileComplete ? "bg-emerald-500" : "bg-amber-500"}`} />
+                {role === "ADMIN" ? "Administrator Account" : isProfileComplete ? "Complete (+20 XP Earned)" : "Incomplete (Fill all fields for +20 XP)"}
               </span>
             </div>
 
             <div className="flex items-center gap-4">
-              {role === "MENTOR" ? (
+              {role === "ADMIN" ? (
+                <Link href="/admin" className="text-purple-700 hover:underline font-semibold flex items-center gap-1">
+                  <span>Admin Command Center →</span>
+                </Link>
+              ) : role === "MENTOR" ? (
                 <>
                   <Link href="/assessment?quiz=mentor_accreditation" className="text-amber-700 hover:underline font-semibold flex items-center gap-1">
-                    <span>👑 AI Mentor Accreditation & Rating →</span>
+                    <span>AI Mentor Accreditation & Rating →</span>
                   </Link>
                   <Link href="/mentor/dashboard" className="text-blue-600 hover:underline font-semibold">
                     Mentor Studio & Ads →
@@ -552,8 +559,8 @@ export default function ProfileView() {
           <div className="rounded-3xl border border-amber-300/80 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 p-6 sm:p-7 text-white shadow-md">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
               <div className="flex items-start gap-4">
-                <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-amber-400 text-slate-950 text-2xl shadow-md font-bold">
-                  {user.profile?.mentorLevel?.includes("Master") ? "👑" : user.profile?.mentorLevel?.includes("Senior") ? "🎖️" : user.profile?.mentorLevel?.includes("Associate") ? "🎓" : "🧭"}
+                <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-amber-400 text-slate-950 shadow-md">
+                  <Award className="size-7 text-slate-950" />
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -604,8 +611,8 @@ export default function ProfileView() {
         {role === "MENTOR" && !isEditing && (
           <div className="rounded-3xl border border-blue-200 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-white p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div className="flex items-start gap-4">
-              <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white text-2xl shadow-md font-bold">
-                📢
+              <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
+                <Megaphone className="size-6 text-white" />
               </div>
               <div>
                 <span className="rounded-full bg-blue-100 border border-blue-200 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700">
@@ -635,8 +642,8 @@ export default function ProfileView() {
           <div className="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/60 via-white to-purple-50/40 p-6 sm:p-7 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex items-start gap-3.5">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white text-xl shadow-xs font-bold">
-                  ⚡
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-xs">
+                  <Zap className="size-6 text-white" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -711,10 +718,7 @@ export default function ProfileView() {
                       <span>Groq AI Analyzing...</span>
                     </>
                   ) : (
-                    <>
-                      <span>Validate with Groq AI</span>
-                      <span>⚡</span>
-                    </>
+                    <span>Validate with Groq AI</span>
                   )}
                 </button>
               </div>
@@ -763,7 +767,7 @@ export default function ProfileView() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3.5">
                     <p className="text-[11px] font-bold text-emerald-900 uppercase tracking-wide">
-                      ✓ Strong Matched Skills
+                      Strong Matched Skills
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {validationResult.matchingStrengths && validationResult.matchingStrengths.length > 0 ? (
@@ -783,7 +787,7 @@ export default function ProfileView() {
 
                   <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3.5">
                     <p className="text-[11px] font-bold text-amber-900 uppercase tracking-wide">
-                      ⚠️ Missing Skill Gaps to Bridge
+                      Missing Skill Gaps to Bridge
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {validationResult.criticalGaps && validationResult.criticalGaps.length > 0 ? (
@@ -795,7 +799,6 @@ export default function ProfileView() {
                             title={`Find peer mentor to learn ${s}`}
                           >
                             <span>{s}</span>
-                            <span className="text-[10px] text-amber-500 group-hover:text-amber-700">🤝</span>
                           </Link>
                         ))
                       ) : (
@@ -808,7 +811,7 @@ export default function ProfileView() {
                 {/* Recommended Role-Aligned AI Assessments */}
                 <div className="border-t border-slate-100 pt-3">
                   <p className="text-xs font-bold text-slate-900 mb-2">
-                    🎯 Recommended Real AI Assessments for this Role:
+                    Recommended Real AI Assessments for this Role:
                   </p>
                   <div className="grid gap-2 sm:grid-cols-3">
                     {validationResult.recommendedAssessments.map((rec) => (
@@ -895,7 +898,6 @@ export default function ProfileView() {
                         title={role === "MENTOR" ? `Take AI Mentor Evaluation in ${skill}` : `Take 5-Question AI Quiz in ${skill}`}
                       >
                         <span>{skill}</span>
-                        <span className="text-[10px] text-slate-400 group-hover:text-blue-600">⚡</span>
                       </Link>
                     ))
                   ) : (
@@ -935,7 +937,8 @@ export default function ProfileView() {
               </div>
 
               {/* Student XP Badge & Paid Mentor Discount Wallet */}
-              <div className="rounded-3xl border border-amber-200/80 bg-gradient-to-br from-amber-50/60 via-white to-amber-50/30 p-6 shadow-xs">
+              {role !== "ADMIN" && (
+                <div className="rounded-3xl border border-amber-200/80 bg-gradient-to-br from-amber-50/60 via-white to-amber-50/30 p-6 shadow-xs">
                 {(() => {
                   const studentXp = user.xp || 0;
                   const currentBadge = getBadgeForXp(studentXp);
@@ -948,19 +951,19 @@ export default function ProfileView() {
                           XP Badge Wallet
                         </span>
                         <span className="text-base font-black text-amber-600">
-                          ⚡ {studentXp} XP
+                          {studentXp} XP
                         </span>
                       </div>
 
                       {/* Current Tier Spotlight */}
                       <div className="mt-3.5 flex items-center gap-3 rounded-2xl border border-amber-200 bg-white p-3.5 shadow-2xs">
-                        <span className="flex size-12 items-center justify-center rounded-xl bg-amber-100 text-2xl">
-                          {currentBadge.icon}
+                        <span className="flex size-12 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+                          <Award className="size-6 text-amber-700" />
                         </span>
                         <div>
                           <h4 className="text-sm font-bold text-slate-900">{currentBadge.name}</h4>
                           <p className="text-[11px] font-semibold text-emerald-700">
-                            ✓ {currentBadge.discountPercent}% Off Paid Mentor Sessions (Max ₹{currentBadge.maxDiscountAmount})
+                            {currentBadge.discountPercent}% Off Paid Mentor Sessions (Max ₹{currentBadge.maxDiscountAmount})
                           </p>
                         </div>
                       </div>
@@ -1003,7 +1006,6 @@ export default function ProfileView() {
                               }`}
                             >
                               <div className="flex items-center gap-1.5">
-                                <span>{tier.icon}</span>
                                 <span>{tier.name}</span>
                               </div>
                               <span className={isUnlocked ? "text-emerald-700 font-bold" : "text-slate-400"}>
@@ -1017,13 +1019,14 @@ export default function ProfileView() {
                       <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
                         <span className="text-slate-500">Profile Completion</span>
                         <span className={user.completedActivities?.includes("profile_completed") ? "font-bold text-emerald-600" : "text-slate-400"}>
-                          {user.completedActivities?.includes("profile_completed") ? "✓ 20 XP" : "Pending (+20 XP)"}
+                          {user.completedActivities?.includes("profile_completed") ? "Completed (+20 XP)" : "Pending (+20 XP)"}
                         </span>
                       </div>
                     </div>
                   );
                 })()}
               </div>
+              )}
 
               {/* Social Links */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
@@ -1069,7 +1072,7 @@ export default function ProfileView() {
                     href="/admin"
                     className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-purple-700 transition"
                   >
-                    <span>🛡️ Open Admin Dashboard</span>
+                    <span>Open Admin Dashboard</span>
                     <span>→</span>
                   </Link>
                 </div>

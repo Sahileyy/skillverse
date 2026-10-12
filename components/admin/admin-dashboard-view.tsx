@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/auth/auth-context";
 import { useLoginModal } from "@/components/auth/login-modal-provider";
 import { getBadgeForXp } from "@/lib/badges";
+import { Shield, AlertTriangle, Check, X } from "@/components/ui/icons";
 
 type PlatformMetrics = {
   users: {
@@ -122,7 +123,7 @@ type AdminReport = {
 type TabType = "overview" | "users" | "posts" | "reports";
 
 export default function AdminDashboardView() {
-  const { user, login } = useAuth();
+  const { user, login, logout } = useAuth();
   const openLoginModal = useLoginModal();
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -147,8 +148,12 @@ export default function AdminDashboardView() {
   const [newRole, setNewRole] = useState<"STUDENT" | "MENTOR" | "ADMIN">("STUDENT");
   const [isUpdatingUser, setIsUpdatingUser] = useState(false);
 
-  // Quick Admin Login State
-  const [isQuickLoggingIn, setIsQuickLoggingIn] = useState(false);
+  // Dedicated Admin Login Form State
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [isAdminLoggingIn, setIsAdminLoggingIn] = useState(false);
+  const [adminLoginError, setAdminLoginError] = useState<string | null>(null);
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   // Show notification helper
   const showToast = (message: string, type: "success" | "error" = "success") => {
@@ -209,18 +214,39 @@ export default function AdminDashboardView() {
     };
   }, [user, refreshKey]);
 
-  // Quick 1-click Admin Login helper for testing
-  const handleQuickAdminLogin = async () => {
-    setIsQuickLoggingIn(true);
+  // Proper Admin Login Form Handler
+  const handleAdminFormLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminLoginError(null);
+
+    const trimmedEmail = adminEmail.trim();
+    if (!trimmedEmail) {
+      setAdminLoginError("Please enter your admin email address.");
+      return;
+    }
+    if (!adminPassword) {
+      setAdminLoginError("Please enter your password.");
+      return;
+    }
+
+    setIsAdminLoggingIn(true);
     try {
-      const res = await login("admin@gmail.com", "admin123");
+      const res = await login(trimmedEmail, adminPassword);
       if (res.success) {
-        showToast("Logged in as Admin (admin@gmail.com)");
+        if (res.user?.role !== "ADMIN") {
+          setAdminLoginError(
+            `Access Denied: Account "${res.user?.email || trimmedEmail}" has role "${res.user?.role}". You must sign in with an Administrator account to access the Admin Control Center.`
+          );
+        } else {
+          showToast(`Welcome to Admin Control Center, ${res.user.name}!`);
+        }
       } else {
-        showToast(res.error || "Failed to sign in as admin", "error");
+        setAdminLoginError(res.error || "Invalid administrator email or password.");
       }
+    } catch {
+      setAdminLoginError("Network connection error. Please try again.");
     } finally {
-      setIsQuickLoggingIn(false);
+      setIsAdminLoggingIn(false);
     }
   };
 
@@ -360,48 +386,151 @@ export default function AdminDashboardView() {
   // NON-ADMIN STATE
   if (!user || user.role !== "ADMIN") {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-slate-50/50 px-5 py-16">
+      <div className="min-h-[80vh] flex items-center justify-center bg-slate-50/50 px-5 py-16 font-sans">
         <div className="max-w-md w-full rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xs">
-          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-purple-50 text-2xl text-purple-600 mb-4 font-bold shadow-xs">
-            🛡️
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-purple-50 mb-4 font-bold ring-4 ring-purple-50/60 shadow-xs">
+            <Shield className="size-7 text-purple-600" />
           </div>
 
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
             SkillVerse Admin Control Center
           </h2>
-          <p className="mt-2 text-xs leading-relaxed text-slate-600">
-            This dashboard is restricted to verified administrators for viewing users, removing accounts, and moderating ads. You are currently{" "}
-            {user ? (
-              <span>
-                signed in as <strong>{user.name}</strong> ({user.role})
-              </span>
-            ) : (
-              <span>not signed in</span>
-            )}.
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-600 mb-6">
+            This portal is restricted to verified administrators for viewing platform analytics, user accounts, and ad moderation.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={handleQuickAdminLogin}
-              disabled={isQuickLoggingIn}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 py-3 text-xs font-bold text-white shadow-xs transition hover:scale-[1.01] disabled:opacity-50 cursor-pointer"
-            >
-              <span>🛡️ Sign In with Admin Credentials</span>
-              <span className="rounded-md bg-purple-500/80 px-2 py-0.5 text-[10px]">admin@gmail.com</span>
-            </button>
+          {/* Warning if logged in as non-admin */}
+          {user && (
+            <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 text-left text-xs text-amber-900">
+              <div className="flex items-center justify-between font-semibold">
+                <span className="flex items-center gap-1.5">
+                  <AlertTriangle className="size-4 text-amber-600 shrink-0" />
+                  <span>Non-Admin Account Detected</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  className="font-bold underline hover:text-amber-950 cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </div>
+              <p className="mt-1 text-[11px] leading-relaxed text-amber-800">
+                You are currently signed in as <strong>{user.name}</strong> ({user.role}), which lacks administrator privileges. Please sign in below with verified administrator credentials.
+              </p>
+            </div>
+          )}
 
+          {/* Error Banner */}
+          {adminLoginError && (
+            <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-left text-xs text-rose-700 flex items-start gap-2">
+              <AlertTriangle className="size-4 shrink-0 text-rose-600" />
+              <p className="flex-1 font-medium leading-relaxed">{adminLoginError}</p>
+            </div>
+          )}
+
+          {/* Proper Admin Login Form */}
+          <form onSubmit={handleAdminFormLogin} className="space-y-4 text-left">
+            <div>
+              <label className="text-xs font-semibold text-slate-700" htmlFor="admin-email">
+                Admin Email
+              </label>
+              <div className="mt-1.5 flex h-11 items-center rounded-xl border border-slate-200 bg-slate-50/60 px-3 transition focus-within:border-purple-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-purple-100">
+                <svg className="size-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                </svg>
+                <input
+                  id="admin-email"
+                  type="email"
+                  autoComplete="email"
+                  value={adminEmail}
+                  onChange={(e) => {
+                    setAdminEmail(e.target.value);
+                    setAdminLoginError(null);
+                  }}
+                  placeholder="admin@gmail.com"
+                  required
+                  className="ml-2.5 h-full w-full border-0 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-700" htmlFor="admin-password">
+                Password
+              </label>
+              <div className="mt-1.5 flex h-11 items-center rounded-xl border border-slate-200 bg-slate-50/60 px-3 transition focus-within:border-purple-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-purple-100">
+                <svg className="size-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <rect height="11" rx="2" strokeWidth="2" width="16" x="4" y="10" />
+                  <path strokeWidth="2" d="M8 10V7a4 4 0 118 0v3" />
+                </svg>
+                <input
+                  id="admin-password"
+                  type={showAdminPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={adminPassword}
+                  onChange={(e) => {
+                    setAdminPassword(e.target.value);
+                    setAdminLoginError(null);
+                  }}
+                  placeholder="Enter admin password"
+                  required
+                  className="ml-2.5 h-full w-full border-0 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAdminPassword(!showAdminPassword)}
+                  className="text-slate-400 hover:text-slate-600 transition p-1 cursor-pointer"
+                  aria-label={showAdminPassword ? "Hide password" : "Show password"}
+                >
+                  {showAdminPassword ? (
+                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    </svg>
+                  ) : (
+                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isAdminLoggingIn}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 py-3 text-xs font-bold text-white shadow-xs transition hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            >
+              {isAdminLoggingIn ? (
+                <span className="flex items-center gap-2">
+                  <svg className="size-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  <span>Authenticating Admin...</span>
+                </span>
+              ) : (
+                <>
+                  <Shield className="size-4" />
+                  <span>Sign In to Admin Portal</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 flex flex-col items-center gap-3 border-t border-slate-100 pt-5 text-xs">
             <button
               type="button"
               onClick={openLoginModal}
-              className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 py-2.5 text-xs font-semibold text-slate-700 transition cursor-pointer"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 py-2.5 text-xs font-semibold text-slate-700 transition cursor-pointer"
             >
               Switch or Sign In to Another Account
             </button>
 
             <Link
               href="/"
-              className="mt-2 text-xs font-medium text-slate-500 hover:text-slate-900 transition underline"
+              className="text-xs font-medium text-slate-500 hover:text-slate-900 transition underline"
             >
               ← Return to SkillVerse Home
             </Link>
@@ -422,7 +551,7 @@ export default function AdminDashboardView() {
               : "bg-rose-600 text-white"
           }`}
         >
-          <span>{notification.type === "success" ? "✓" : "⚠"}</span>
+          <span>{notification.type === "success" ? <Check className="size-4" /> : <AlertTriangle className="size-4" />}</span>
           <span>{notification.message}</span>
         </div>
       )}
@@ -456,7 +585,7 @@ export default function AdminDashboardView() {
               onClick={() => setActiveTab("posts")}
               className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition cursor-pointer"
             >
-              <span>📢 Moderate Ads</span>
+              <span>Moderate Ads</span>
               <span>→</span>
             </button>
           </div>
@@ -466,8 +595,8 @@ export default function AdminDashboardView() {
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
             <div className="flex items-start sm:items-center gap-4">
-              <div className="flex size-16 sm:size-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-700 to-indigo-600 text-2xl font-bold text-white shadow-xs">
-                🛡️
+              <div className="flex size-16 sm:size-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-700 to-indigo-600 font-bold text-white shadow-xs">
+                <Shield className="size-8 text-white" />
               </div>
 
               <div>
@@ -475,9 +604,8 @@ export default function AdminDashboardView() {
                   <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
                     Admin Command Center
                   </h1>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-bold text-purple-700">
-                    <span>★</span>
-                    <span>Platform Moderator</span>
+                  <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-bold text-purple-700">
+                    Platform Moderator
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
@@ -502,10 +630,10 @@ export default function AdminDashboardView() {
           {/* Sub Navigation Tabs (Streamlined to Users & Ads) */}
           <div className="mt-6 flex flex-wrap gap-2">
             {[
-              { id: "overview", label: "Overview & Analytics", icon: "📊" },
-              { id: "users", label: `Users Directory (${usersList.length})`, icon: "👥" },
-              { id: "posts", label: `Skill Ads (${postsList.length})`, icon: "📢" },
-              { id: "reports", label: `Moderation Flags (${reportsList.length})`, icon: "🚨" },
+              { id: "overview", label: "Overview & Analytics" },
+              { id: "users", label: `Users Directory (${usersList.length})` },
+              { id: "posts", label: `Skill Ads (${postsList.length})` },
+              { id: "reports", label: `Moderation Flags (${reportsList.length})` },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -517,7 +645,6 @@ export default function AdminDashboardView() {
                     : "border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <span>{tab.icon}</span>
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -533,9 +660,6 @@ export default function AdminDashboardView() {
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500">Total Registered Users</span>
-                  <span className="rounded-lg bg-blue-50 border border-blue-100 px-2 py-0.5 text-xs text-blue-700 font-bold">
-                    👥 Accounts
-                  </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-3xl font-black text-slate-900">{metrics?.users.total || usersList.length}</span>
@@ -552,9 +676,6 @@ export default function AdminDashboardView() {
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500">Student Peer Ads</span>
-                  <span className="rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-xs text-emerald-800 font-bold">
-                    🌱 Peer Exchange
-                  </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-3xl font-black text-slate-900">{metrics?.posts.studentPeerAds ?? 0}</span>
@@ -570,9 +691,6 @@ export default function AdminDashboardView() {
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500">Industry Mentor Ads</span>
-                  <span className="rounded-lg bg-blue-50 border border-blue-100 px-2 py-0.5 text-xs text-blue-700 font-bold">
-                    👑 Mentorship
-                  </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-3xl font-black text-slate-900">{metrics?.posts.mentorAds ?? 0}</span>
@@ -588,9 +706,6 @@ export default function AdminDashboardView() {
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500">XP Economy</span>
-                  <span className="rounded-lg bg-purple-50 border border-purple-100 px-2 py-0.5 text-xs text-purple-700 font-bold">
-                    ⚡ Gamification
-                  </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-3xl font-black text-slate-900">
@@ -610,7 +725,7 @@ export default function AdminDashboardView() {
               {/* Quick Actions Panel */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <span>⚡ Quick Admin Operations</span>
+                  <span>Quick Admin Operations</span>
                 </h3>
                 <p className="mt-1 text-xs text-slate-500">Administrative tools to view or remove users and ads.</p>
 
@@ -708,7 +823,7 @@ export default function AdminDashboardView() {
                       <div>
                         <p className="text-xs font-bold text-slate-900 truncate max-w-[180px]">{p.title}</p>
                         <p className="text-[10px] text-slate-500 mt-0.5">
-                          By {p.user.name} • {p.user.role === "STUDENT" ? "🌱 Peer" : "👑 Mentor"}
+                          By {p.user.name} • {p.user.role === "STUDENT" ? "Peer" : "Mentor"}
                         </p>
                       </div>
                       <div className="text-right">
@@ -801,7 +916,7 @@ export default function AdminDashboardView() {
 
                           <td className="px-5 py-4">
                             <span
-                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${
                                 u.role === "ADMIN"
                                   ? "bg-purple-50 text-purple-700 border border-purple-200"
                                   : u.role === "MENTOR"
@@ -809,7 +924,6 @@ export default function AdminDashboardView() {
                                   : "bg-emerald-50 text-emerald-800 border border-emerald-200"
                               }`}
                             >
-                              <span>{u.role === "ADMIN" ? "🛡️" : u.role === "MENTOR" ? "👑" : "🌱"}</span>
                               <span>{u.role}</span>
                             </span>
                           </td>
@@ -818,7 +932,7 @@ export default function AdminDashboardView() {
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-purple-700">{u.xp} XP</span>
                               <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] text-slate-700 font-semibold">
-                                {badge.icon} {badge.name}
+                                {badge.name}
                               </span>
                             </div>
                           </td>
@@ -892,7 +1006,7 @@ export default function AdminDashboardView() {
                         : "border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     }`}
                   >
-                    {r === "ALL" ? "All Ads" : r === "STUDENT" ? "🌱 Student Peer Ads" : "👑 Mentor Ads"}
+                    {r === "ALL" ? "All Ads" : r === "STUDENT" ? "Student Peer Ads" : "Mentor Ads"}
                   </button>
                 ))}
 
@@ -926,13 +1040,11 @@ export default function AdminDashboardView() {
                     <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                       <div className="flex items-center gap-2">
                         {post.user.role === "STUDENT" ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
-                            <span>🌱</span>
+                          <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
                             <span>Student Peer Ad (XP Only)</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[11px] font-bold text-blue-700">
-                            <span>👑</span>
+                          <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[11px] font-bold text-blue-700">
                             <span>Industry Mentor Ad</span>
                           </span>
                         )}
@@ -975,7 +1087,7 @@ export default function AdminDashboardView() {
                             : "bg-blue-50 text-blue-700 border border-blue-200"
                         }`}
                       >
-                        {post.pricingType === "FREE" ? "🎁 Free Exchange" : `₹${post.priceAmount}`}
+                        {post.pricingType === "FREE" ? "Free Exchange" : `₹${post.priceAmount}`}
                       </span>
                     </div>
                   </div>
@@ -1099,8 +1211,8 @@ export default function AdminDashboardView() {
                     {reportsList.length === 0 && (
                       <tr>
                         <td colSpan={7} className="text-center py-10 text-slate-500">
-                          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 text-lg font-bold mb-2">
-                            ✓
+                          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 mb-2">
+                            <Check className="size-6 text-emerald-600" />
                           </div>
                           <p className="text-sm font-bold text-slate-900">No open moderation reports!</p>
                           <p className="text-xs text-slate-500 mt-1">Platform community content is in good standing.</p>
@@ -1128,7 +1240,7 @@ export default function AdminDashboardView() {
                 onClick={() => setSelectedUserForEdit(null)}
                 className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
               >
-                ✕
+                <X className="size-4" />
               </button>
             </div>
 

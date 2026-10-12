@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-context";
 
 type LoginModalProps = {
@@ -8,6 +9,7 @@ type LoginModalProps = {
 };
 
 export default function LoginModal({ onClose }: LoginModalProps) {
+  const router = useRouter();
   const { login, register, user, logout } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -47,6 +49,9 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         const result = await login(email, password);
         if (result.success) {
           onClose();
+          if (result.user?.role === "ADMIN") {
+            router.push("/admin");
+          }
         } else {
           setErrorMessage(result.error || "Failed to sign in");
         }
@@ -113,13 +118,26 @@ export default function LoginModal({ onClose }: LoginModalProps) {
               {user.email} • <span className="font-semibold text-slate-700">{user.role}</span>
             </p>
             <div className="mt-6 flex flex-col gap-2.5">
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full rounded-xl bg-slate-900 py-3 text-xs font-bold text-white transition hover:bg-slate-800 cursor-pointer"
-              >
-                Continue to SkillVerse
-              </button>
+              {user.role === "ADMIN" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    router.push("/admin");
+                  }}
+                  className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 py-3 text-xs font-bold text-white transition cursor-pointer"
+                >
+                  Go to Admin Command Center →
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full rounded-xl bg-slate-900 py-3 text-xs font-bold text-white transition hover:bg-slate-800 cursor-pointer"
+                >
+                  Continue to SkillVerse
+                </button>
+              )}
               <button
                 type="button"
                 onClick={async () => {
@@ -276,22 +294,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
               {mode === "signin" ? "Sign Up" : "Sign In"}
             </button>
           </p>
-
-          {mode === "signin" && (
-            <div className="mt-2 border-t border-slate-100 pt-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("admin@gmail.com");
-                  setPassword("admin123");
-                }}
-                className="w-full flex items-center justify-between rounded-xl border border-purple-200 bg-purple-50/70 p-2.5 text-xs text-purple-900 font-semibold hover:bg-purple-100 transition"
-              >
-                <span>🛡️ Quick Fill Admin Credentials</span>
-                <span className="text-[11px] text-purple-700 font-mono">admin@gmail.com</span>
-              </button>
-            </div>
-          )}
         </form>
         </>
         )}
